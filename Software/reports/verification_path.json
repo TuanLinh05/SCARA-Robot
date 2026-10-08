@@ -1,0 +1,47 @@
+[
+  {
+    "pattern": "BK",
+    "size_mm": 20,
+    "strokes": 3,
+    "segments": 156,
+    "previous_ink_seconds": 35.452766,
+    "continuous_ink_seconds": 16.290031,
+    "speedup": 2.1763473623837792,
+    "rises": [
+      0,
+      616,
+      1477
+    ],
+    "note": "Virtual actual GPIO/timer ISR; excludes pen lifts/travel, host/USB upload time and hardware mechanics"
+  },
+  {
+    "pattern": "LINH",
+    "size_mm": 40,
+    "strokes": 8,
+    "segments": 152,
+    "previous_ink_seconds": 36.219593,
+    "continuous_ink_seconds": 19.35006,
+    "speedup": 1.8718077876761108,
+    "rises": [
+      0,
+      733,
+      1490
+    ],
+    "note": "Virtual actual GPIO/timer ISR; excludes pen lifts/travel, host/USB upload time and hardware mechanics"
+  },
+  {
+    "pattern": "THOA",
+    "size_mm": 40,
+    "strokes": 8,
+    "segments": 170,
+    "previous_ink_seconds": 37.210333000000006,
+    "continuous_ink_seconds": 18.27006,
+    "speedup": 2.036683678105053,
+    "rises": [
+      0,
+      663,
+      1545
+    ],
+    "note": "Virtual actual GPIO/timer ISR; excludes pen lifts/travel, host/USB upload time and hardware mechanics"
+  }
+]

@@ -1,0 +1,15 @@
+SCARA Deli EG118 pen-holder design, revision 1, 2026-10-08.
+
+Reference arm geometry is from madl3x/x-scara:
+https://github.com/madl3x/x-scara
+Source commit noted by this workspace:
+3c7c17e3dc0805b41a3cac6d4cd2778d585d7ed2
+Reference license: GNU General Public License version 3.
+
+Original source STL files remain under Hardware/arm/STL/Black_Quantity1/.
+The preview PNGs and assembly_reference.glb contain cropped, transformed
+reference arm geometry. The printable holder is a new parametrically
+constructed design fitted against those reference meshes.
+
+This artifact package is provided under GPL-3.0, with the editable design
+source in EG118_Holder.scad and build_holder.py. See SOURCE_LICENSE.txt.

@@ -1,0 +1,21 @@
+#VRML_SIM R2025a utf8
+# Paper top exactly Z=0; explicit UV coordinates for native Pen drawing.
+PROTO DrawingPaper [] {
+  Solid {
+    name "Drawing paper" contactMaterial "paper"
+    children [
+      Shape {
+        appearance PBRAppearance { baseColor 1 1 1 metalness 0 roughness 1
+          baseColorMap ImageTexture { url [ "../../common/assets/textures/paper.png" ] } }
+        geometry IndexedFaceSet {
+          coord Coordinate { point [ -0.05 -0.05 0, 0.05 -0.05 0, 0.05 0.05 0, -0.05 0.05 0 ] }
+          coordIndex [ 0 1 2 3 -1 ]
+          texCoord TextureCoordinate { point [ 0 0, 1 0, 1 1, 0 1 ] }
+          texCoordIndex [ 0 1 2 3 -1 ]
+        }
+      }
+      Pose { translation 0 0 -0.002 children [ Shape { appearance PBRAppearance { baseColor 0.83 0.84 0.86 roughness 0.65 metalness 0 } geometry Box { size 0.1 0.1 0.0039 } } ] }
+    ]
+    boundingObject Pose { translation 0 0 -0.0015 children [ Box { size 0.1 0.1 0.003 } ] }
+  }
+}

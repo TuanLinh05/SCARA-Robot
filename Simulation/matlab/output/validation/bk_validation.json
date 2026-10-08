@@ -1,0 +1,11 @@
+{
+  "pattern": "BK",
+  "sizeMm": 69.999999999999986,
+  "strokes": 3,
+  "durationSeconds": 24.83,
+  "rmsErrorMm": 0.00013836341092041753,
+  "maxErrorMm": 0.0011073146217339446,
+  "maximumNormalForceN": 0.48015233169204957,
+  "simulinkTested": true,
+  "simulinkMaximumStateDifference": 1.6107115641261771E-12
+}

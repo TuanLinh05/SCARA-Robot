@@ -1,0 +1,4 @@
+__pycache__/
+.packaging/
+build/
+dist/

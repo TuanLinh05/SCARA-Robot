@@ -1,0 +1,41 @@
+{
+  "kinematicsCases": 100,
+  "jacobianCases": 100,
+  "massMatrixCases": 100,
+  "coriolisEnergyCases": 100,
+  "stlInstances": 11,
+  "dynamicsParameters": "estimates",
+  "paths": [
+    {
+      "name": "circle",
+      "rmsErrorMm": 8.8278314581151517E-5,
+      "maxErrorMm": 0.000482514241381097,
+      "maximumNormalForceN": 0.48015229681496696
+    },
+    {
+      "name": "flower",
+      "rmsErrorMm": 0.00014980836992426377,
+      "maxErrorMm": 0.00047915430653532233,
+      "maximumNormalForceN": 0.48015229681496696
+    },
+    {
+      "name": "square",
+      "rmsErrorMm": 9.365824249096618E-5,
+      "maxErrorMm": 0.0006156281155518487,
+      "maximumNormalForceN": 0.48015229681496696
+    },
+    {
+      "name": "bk",
+      "rmsErrorMm": 0.00013836341092041753,
+      "maxErrorMm": 0.0011073146217339446,
+      "maximumNormalForceN": 0.48015233169204957
+    },
+    {
+      "name": "D:\\HK261\\Robot\\HPMR\\Scara Robot\\Simulation\\common\\trajectories\\example_drawing.csv",
+      "rmsErrorMm": 0.0010115893907159806,
+      "maxErrorMm": 0.0046993650315073814,
+      "maximumNormalForceN": 0.48048297732988815
+    }
+  ],
+  "simulinkTested": false
+}

@@ -1,0 +1,59 @@
+{
+  "l1_mm": 98.0,
+  "l2_mm": 98.0,
+  "lead_mm_rev": 2.0,
+  "z_span_mm": 0.0,
+  "joint_limits_deg": [
+    [
+      -90.0,
+      90.0
+    ],
+    [
+      -90.0,
+      90.0
+    ]
+  ],
+  "park_deg": [
+    0.0,
+    45.0
+  ],
+  "z_clear_mm": 3.0,
+  "microsteps": [
+    16,
+    8,
+    8
+  ],
+  "ratios": [
+    3.0,
+    9.0
+  ],
+  "positive_high": [
+    true,
+    true,
+    false
+  ],
+  "coupling": 1.333333,
+  "arm_home_pps": 200,
+  "j2_home_pps": 800,
+  "j2_latch_pps": 200,
+  "z_latch_pps": 400,
+  "home_in_background": true,
+  "arm_scan_pulses": 40000,
+  "z_scan_pulses": 300000,
+  "arm_backoff_pulses": 512,
+  "z_backoff_pulses": 1024,
+  "max_master_rate": 1600,
+  "max_joint_speed_deg_s": [
+    15.0,
+    10.0
+  ],
+  "max_z_speed_mm_s": 1.0,
+  "auto_coupling": true,
+  "coupling_probe_pulses": 128,
+  "motion_in_background": true,
+  "z_home_speed_mm_s": 3.0,
+  "tool_offset_mm": [
+    0,
+    0
+  ]
+}

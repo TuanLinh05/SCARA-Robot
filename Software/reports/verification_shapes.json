@@ -1,0 +1,50 @@
+[
+  {
+    "pattern": "FLOWER",
+    "strokes": 7,
+    "operations": 426,
+    "max_model_error_mm": 0.16376649554434458
+  },
+  {
+    "pattern": "HEART",
+    "strokes": 1,
+    "operations": 146,
+    "max_model_error_mm": 0.1531195543125039
+  },
+  {
+    "pattern": "STAR",
+    "strokes": 1,
+    "operations": 124,
+    "max_model_error_mm": 0.15467732260857744
+  },
+  {
+    "pattern": "ELLIPSE",
+    "strokes": 1,
+    "operations": 132,
+    "max_model_error_mm": 0.16131762893332488
+  },
+  {
+    "pattern": "TRIANGLE",
+    "strokes": 1,
+    "operations": 100,
+    "max_model_error_mm": 0.14836180777534066
+  },
+  {
+    "pattern": "DIAMOND",
+    "strokes": 1,
+    "operations": 96,
+    "max_model_error_mm": 0.15373599962159545
+  },
+  {
+    "pattern": "CIRCLE",
+    "strokes": 1,
+    "operations": 132,
+    "max_model_error_mm": 0.16794546298277058
+  },
+  {
+    "pattern": "SQUARE",
+    "strokes": 1,
+    "operations": 132,
+    "max_model_error_mm": 0.13815048439829525
+  }
+]

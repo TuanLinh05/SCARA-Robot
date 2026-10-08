@@ -1,0 +1,12 @@
+.matlab_prefs/
+cache/
+codegen/
+slprj/
+*.slxc
+*.slx.autosave
+__pycache__/
+*.pyc
+.pytest_cache/
+webots/output/runs/
+matlab/output/cache/
+matlab/output/codegen/

@@ -1,0 +1,788 @@
+{
+  "backup": {
+    "archive_path": "D:\\HK261\\Robot\\HPMR\\Scara Robot\\.cleanup_backup\\scara_cleanup_20261008.zip",
+    "archive_bytes": 475216145,
+    "file_count": 26771,
+    "archive_sha256": "A593FDB66FEB85D55601BB6E024EFB947B06A9C824D3C23FF40B911C3F084AFB",
+    "verified": true
+  },
+  "method": "Exact manifest; all original files restored from SHA256-verified ZIP if needed",
+  "deleted": [
+    {
+      "bytes": 3165650.0,
+      "file_count": 48,
+      "path": "Firmware\\ScaraJog"
+    },
+    {
+      "bytes": 20726912.0,
+      "file_count": 90,
+      "path": "Firmware\\Ref\\Debug"
+    },
+    {
+      "bytes": 1236889.0,
+      "file_count": 94,
+      "path": "Firmware\\Ref\\Release"
+    },
+    {
+      "bytes": 12667497.0,
+      "file_count": 383,
+      "path": "Firmware\\ScaraCartesian\\build_mcu"
+    },
+    {
+      "bytes": 450223.0,
+      "file_count": 6,
+      "path": "Firmware\\ScaraCartesian\\build_host"
+    },
+    {
+      "bytes": 14225.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Legacy_v4_R1_sources.zip"
+    },
+    {
+      "bytes": 95933916.0,
+      "file_count": 208,
+      "path": "Software\\build"
+    },
+    {
+      "bytes": 418154.0,
+      "file_count": 21,
+      "path": "Software\\__pycache__"
+    },
+    {
+      "bytes": 110200.0,
+      "file_count": 8,
+      "path": "Software\\tests\\__pycache__"
+    },
+    {
+      "bytes": 47708.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R1.bin"
+    },
+    {
+      "bytes": 134363.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R1.hex"
+    },
+    {
+      "bytes": 49064.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R2.bin"
+    },
+    {
+      "bytes": 138167.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R2.hex"
+    },
+    {
+      "bytes": 49640.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R3.bin"
+    },
+    {
+      "bytes": 139787.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R3.hex"
+    },
+    {
+      "bytes": 50956.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R4.bin"
+    },
+    {
+      "bytes": 143485.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R4.hex"
+    },
+    {
+      "bytes": 50964.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R5.bin"
+    },
+    {
+      "bytes": 143514.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R5.hex"
+    },
+    {
+      "bytes": 50972.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R6.bin"
+    },
+    {
+      "bytes": 143543.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R6.hex"
+    },
+    {
+      "bytes": 52420.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R7.bin"
+    },
+    {
+      "bytes": 147609.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R7.hex"
+    },
+    {
+      "bytes": 54276.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R8.bin"
+    },
+    {
+      "bytes": 152816.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_NC_Home_v5_R8.hex"
+    },
+    {
+      "bytes": 42624.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_v4_R1.bin"
+    },
+    {
+      "bytes": 120048.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\SCARA_Cartesian_v4_R1.hex"
+    },
+    {
+      "bytes": 1427.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\verification_nc_v5_R1.json"
+    },
+    {
+      "bytes": 1722.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\verification_nc_v5_R2.json"
+    },
+    {
+      "bytes": 1974.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\verification_nc_v5_R3.json"
+    },
+    {
+      "bytes": 2329.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\verification_nc_v5_R4.json"
+    },
+    {
+      "bytes": 2628.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\verification_nc_v5_R5.json"
+    },
+    {
+      "bytes": 2931.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\verification_nc_v5_R6.json"
+    },
+    {
+      "bytes": 4490.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\verification_nc_v5_R7.json"
+    },
+    {
+      "bytes": 3987.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\verification_nc_v5_R8.json"
+    },
+    {
+      "bytes": 2087.0,
+      "file_count": 1,
+      "path": "Firmware\\ScaraCartesian\\Hex\\verification.json"
+    },
+    {
+      "bytes": 28127671.0,
+      "file_count": 991,
+      "path": "Software\\dist\\SCARA_Cartesian_Control_v4"
+    },
+    {
+      "bytes": 27928307.0,
+      "file_count": 990,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R1"
+    },
+    {
+      "bytes": 41229296.0,
+      "file_count": 1000,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R10"
+    },
+    {
+      "bytes": 28264479.0,
+      "file_count": 1000,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R11"
+    },
+    {
+      "bytes": 28281190.0,
+      "file_count": 1001,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R12"
+    },
+    {
+      "bytes": 55046356.0,
+      "file_count": 1010,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R13"
+    },
+    {
+      "bytes": 27930774.0,
+      "file_count": 990,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R2"
+    },
+    {
+      "bytes": 27936311.0,
+      "file_count": 991,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R3"
+    },
+    {
+      "bytes": 27936144.0,
+      "file_count": 991,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R4"
+    },
+    {
+      "bytes": 27936532.0,
+      "file_count": 991,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R5"
+    },
+    {
+      "bytes": 27937180.0,
+      "file_count": 991,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R6"
+    },
+    {
+      "bytes": 34636477.0,
+      "file_count": 996,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R7"
+    },
+    {
+      "bytes": 38883887.0,
+      "file_count": 997,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R8"
+    },
+    {
+      "bytes": 36126933.0,
+      "file_count": 999,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R9"
+    },
+    {
+      "bytes": 27918806.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Joint_Control_v3"
+    },
+    {
+      "bytes": 27921672.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Joint_Control_v3_R2"
+    },
+    {
+      "bytes": 27925318.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Switch_Control_v4"
+    },
+    {
+      "bytes": 27935355.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Switch_Control_v4_Cal_R2"
+    },
+    {
+      "bytes": 27936051.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Switch_Control_v4_Cal_R3"
+    },
+    {
+      "bytes": 27936740.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Switch_Control_v4_Cal_R4"
+    },
+    {
+      "bytes": 27891614.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Z_Control"
+    },
+    {
+      "bytes": 27892889.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Z_Control_v2"
+    },
+    {
+      "bytes": 27894960.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Z_Control_v2_Diagnostic"
+    },
+    {
+      "bytes": 27894968.0,
+      "file_count": 988,
+      "path": "Software\\dist\\SCARA_Z_Control_v2_Diagnostic_R3"
+    },
+    {
+      "bytes": 32127.0,
+      "file_count": 1,
+      "path": "Software\\arm_control.py"
+    },
+    {
+      "bytes": 443.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_config.json"
+    },
+    {
+      "bytes": 25197.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_control.py"
+    },
+    {
+      "bytes": 132042.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_firmware_sim.dll"
+    },
+    {
+      "bytes": 68225.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_nc_preview.png"
+    },
+    {
+      "bytes": 48353.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_nc_R12_BK_preview.png"
+    },
+    {
+      "bytes": 48119.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_nc_R12_LINH_preview.png"
+    },
+    {
+      "bytes": 49901.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_nc_R12_THOA_preview.png"
+    },
+    {
+      "bytes": 68359.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_nc_R13_dashboard.png"
+    },
+    {
+      "bytes": 58279.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_nc_R13_flower_studio.png"
+    },
+    {
+      "bytes": 76335.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_nc_R7_fault_preview.png"
+    },
+    {
+      "bytes": 67466.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_nc_R8_model_preview.png"
+    },
+    {
+      "bytes": 23732.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_nc_R8_setpoints_preview.png"
+    },
+    {
+      "bytes": 4104.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_protocol.py"
+    },
+    {
+      "bytes": 2354.0,
+      "file_count": 1,
+      "path": "Software\\cartesian_simulator.py"
+    },
+    {
+      "bytes": 10201.0,
+      "file_count": 1,
+      "path": "Software\\joint_protocol.py"
+    },
+    {
+      "bytes": 8139.0,
+      "file_count": 1,
+      "path": "Software\\joint_simulator.py"
+    },
+    {
+      "bytes": 4645.0,
+      "file_count": 1,
+      "path": "Software\\README_arm_v3_R2.md"
+    },
+    {
+      "bytes": 7572.0,
+      "file_count": 1,
+      "path": "Software\\README_arm_v4_Cal_R2.md"
+    },
+    {
+      "bytes": 9118.0,
+      "file_count": 1,
+      "path": "Software\\README_arm_v4_Cal_R3.md"
+    },
+    {
+      "bytes": 4318.0,
+      "file_count": 1,
+      "path": "Software\\README_arm_v4_R1.md"
+    },
+    {
+      "bytes": 11312.0,
+      "file_count": 1,
+      "path": "Software\\README_arm.md"
+    },
+    {
+      "bytes": 6428.0,
+      "file_count": 1,
+      "path": "Software\\README_cartesian_nc.md"
+    },
+    {
+      "bytes": 3881.0,
+      "file_count": 1,
+      "path": "Software\\README_cartesian_R10.md"
+    },
+    {
+      "bytes": 4785.0,
+      "file_count": 1,
+      "path": "Software\\README_cartesian_R11.md"
+    },
+    {
+      "bytes": 4990.0,
+      "file_count": 1,
+      "path": "Software\\README_cartesian_R12.md"
+    },
+    {
+      "bytes": 3897.0,
+      "file_count": 1,
+      "path": "Software\\README_cartesian_R13.md"
+    },
+    {
+      "bytes": 4305.0,
+      "file_count": 1,
+      "path": "Software\\README_cartesian_R14.md"
+    },
+    {
+      "bytes": 5645.0,
+      "file_count": 1,
+      "path": "Software\\README_cartesian_R8.md"
+    },
+    {
+      "bytes": 4388.0,
+      "file_count": 1,
+      "path": "Software\\README_cartesian_R9_BK.md"
+    },
+    {
+      "bytes": 7817.0,
+      "file_count": 1,
+      "path": "Software\\README_cartesian.md"
+    },
+    {
+      "bytes": 1224.0,
+      "file_count": 1,
+      "path": "Software\\Run_Arm_GUI.bat"
+    },
+    {
+      "bytes": 389.0,
+      "file_count": 1,
+      "path": "Software\\Run_Cartesian_Legacy_GUI.bat"
+    },
+    {
+      "bytes": 696.0,
+      "file_count": 1,
+      "path": "Software\\Run_GUI.bat"
+    },
+    {
+      "bytes": 939.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_Control_v4.spec"
+    },
+    {
+      "bytes": 813.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R1.spec"
+    },
+    {
+      "bytes": 2376.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R10.spec"
+    },
+    {
+      "bytes": 2444.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R11.spec"
+    },
+    {
+      "bytes": 2512.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R12.spec"
+    },
+    {
+      "bytes": 2580.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R13.spec"
+    },
+    {
+      "bytes": 1121.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R2.spec"
+    },
+    {
+      "bytes": 1503.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R3.spec"
+    },
+    {
+      "bytes": 1344.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R4.spec"
+    },
+    {
+      "bytes": 1344.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R5.spec"
+    },
+    {
+      "bytes": 1423.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R6.spec"
+    },
+    {
+      "bytes": 2001.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R7.spec"
+    },
+    {
+      "bytes": 2235.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R8.spec"
+    },
+    {
+      "bytes": 2302.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Cartesian_NC_v5_R9.spec"
+    },
+    {
+      "bytes": 827.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Joint_Control_v3_R2.spec"
+    },
+    {
+      "bytes": 821.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Joint_Control_v3.spec"
+    },
+    {
+      "bytes": 837.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Switch_Control_v4_Cal_R2.spec"
+    },
+    {
+      "bytes": 837.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Switch_Control_v4_Cal_R3.spec"
+    },
+    {
+      "bytes": 837.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Switch_Control_v4_Cal_R4.spec"
+    },
+    {
+      "bytes": 823.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Switch_Control_v4.spec"
+    },
+    {
+      "bytes": 845.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Z_Control_v2_Diagnostic_R3.spec"
+    },
+    {
+      "bytes": 839.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Z_Control_v2_Diagnostic.spec"
+    },
+    {
+      "bytes": 817.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Z_Control_v2.spec"
+    },
+    {
+      "bytes": 811.0,
+      "file_count": 1,
+      "path": "Software\\SCARA_Z_Control.spec"
+    },
+    {
+      "bytes": 3178.0,
+      "file_count": 1,
+      "path": "Software\\simulator.py"
+    },
+    {
+      "bytes": 2737.0,
+      "file_count": 1,
+      "path": "Software\\verification_gui_R10.json"
+    },
+    {
+      "bytes": 3185.0,
+      "file_count": 1,
+      "path": "Software\\verification_gui_R11.json"
+    },
+    {
+      "bytes": 7963.0,
+      "file_count": 1,
+      "path": "Software\\verification_gui_R12.json"
+    },
+    {
+      "bytes": 2619.0,
+      "file_count": 1,
+      "path": "Software\\verification_gui_R13.json"
+    },
+    {
+      "bytes": 1973.0,
+      "file_count": 1,
+      "path": "Software\\verification_gui_R8.json"
+    },
+    {
+      "bytes": 2345.0,
+      "file_count": 1,
+      "path": "Software\\verification_gui_R9.json"
+    },
+    {
+      "bytes": 1187.0,
+      "file_count": 1,
+      "path": "Software\\verification_path_R11.json"
+    },
+    {
+      "bytes": 23675.0,
+      "file_count": 1,
+      "path": "Software\\z_jog.py"
+    },
+    {
+      "bytes": 6450.0,
+      "file_count": 1,
+      "path": "Software\\tests\\test_arm_gui.py"
+    },
+    {
+      "bytes": 3957.0,
+      "file_count": 1,
+      "path": "Software\\tests\\test_calibration_gui.py"
+    },
+    {
+      "bytes": 3798.0,
+      "file_count": 1,
+      "path": "Software\\tests\\test_cartesian_gui.py"
+    },
+    {
+      "bytes": 6707.0,
+      "file_count": 1,
+      "path": "Software\\tests\\test_cartesian.py"
+    },
+    {
+      "bytes": 5306.0,
+      "file_count": 1,
+      "path": "Software\\tests\\test_gui.py"
+    },
+    {
+      "bytes": 8482.0,
+      "file_count": 1,
+      "path": "Software\\tests\\test_joint_protocol.py"
+    },
+    {
+      "bytes": 9274.0,
+      "file_count": 1,
+      "path": "Software\\tests\\test_protocol.py"
+    },
+    {
+      "bytes": 32067.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\drawing_audit_20261008.json"
+    },
+    {
+      "bytes": 1057.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\drawing_audit_20261008.md"
+    },
+    {
+      "bytes": 3881.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\README_cartesian_R10.md"
+    },
+    {
+      "bytes": 4785.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\README_cartesian_R11.md"
+    },
+    {
+      "bytes": 4990.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\README_cartesian_R12.md"
+    },
+    {
+      "bytes": 3897.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\README_cartesian_R13.md"
+    },
+    {
+      "bytes": 4305.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\README_cartesian_R14.md"
+    },
+    {
+      "bytes": 5645.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\README_cartesian_R8.md"
+    },
+    {
+      "bytes": 4388.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\README_cartesian_R9_BK.md"
+    },
+    {
+      "bytes": 2952.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\verification_gui_R14.json"
+    },
+    {
+      "bytes": 1176.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\verification_path_R12.json"
+    },
+    {
+      "bytes": 1020.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\verification_shapes_R13.json"
+    },
+    {
+      "bytes": 58607.0,
+      "file_count": 1,
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\logs\\cartesian_20261008_134422_14788_11557fa0.jsonl"
+    }
+  ],
+  "preserved": "GUI R14/FW R9, source/tests, Ref original sources, verified real log copies",
+  "final_generated_cleanup": [
+    {
+      "bytes": 25043309.0,
+      "path": "Software/.packaging",
+      "purpose": "Generated build/test cache; source and verified executable retained"
+    },
+    {
+      "bytes": 7635824.0,
+      "path": "Software/build",
+      "purpose": "Generated build/test cache; source and verified executable retained"
+    },
+    {
+      "bytes": 891057.0,
+      "path": "Firmware/ScaraCartesian/build_host",
+      "purpose": "Generated build/test cache; source and verified executable retained"
+    },
+    {
+      "purpose": "Offline smoke-test log",
+      "path": "Software\\dist\\SCARA_Cartesian_NC_v5_R14\\logs\\cartesian_20261008_151452_8828_3e07e57b.jsonl"
+    }
+  ],
+  "final_folders": {
+    "Firmware": {
+      "files": 61,
+      "bytes": 523366
+    },
+    "Software": {
+      "files": 1054,
+      "bytes": 93132873
+    }
+  },
+  "validation": {
+    "current_gui": "R14",
+    "current_firmware": "R9",
+    "unit_tests": 44,
+    "gui_workflows": 5,
+    "native_firmware_tests": true,
+    "packaged_offline_smoke_test": true,
+    "no_hardware_motion": true
+  }
+}

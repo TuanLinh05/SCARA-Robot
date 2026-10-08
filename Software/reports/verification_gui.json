@@ -1,0 +1,105 @@
+{
+  "gui": "SCARA_GUI_V5_R14",
+  "firmware_required": "SCARA_CART_NC_HOME_V5_R9",
+  "firmware_modified": false,
+  "unit_tests": 44,
+  "current_gui_workflow": "offline HOME/MOVE/STOP/release/stale",
+  "packaged_offline_smoke_test_passed": true,
+  "tool_offset_default": [
+    0,
+    0
+  ],
+  "prior_mechanics_preserved": true,
+  "physical_drawing_fix_verified": false,
+  "exe_sha256": "df406842e63a9d3513e7ae6669801c27b59e02ad1bfa17b4fc930f542755a045",
+  "sources_sha256": {
+    "cartesian_nc_audit.py": "02c39e1211fbaf4b1afb618f958249eb8c144afc4313887d5db8eecaa60ec81e",
+    "cartesian_nc_control.py": "281ec97c7aca0bbf6509fed11eb6cf47f36cbb2945aa1497c65831fee4bcd491",
+    "cartesian_nc_curves.py": "24352a41a076ccd5c36fb5e063c93cfe53b1426dc8033dfcc2c6f3cf75512c62",
+    "cartesian_nc_demo.py": "bbc0df9141c9cb1b8a453ad0e55df7d030d6fff006bfd109c5f8a03410737d6c",
+    "cartesian_nc_drawing.py": "5d1fb293d7e517d18d12aeb2f57da8c7eff69a4c7d341d7fd2dd809ae4147aa1",
+    "cartesian_nc_drawing_gui.py": "43ac3d8e84e9ea3606d4641427fd061ea68f212207b9e0f758912adcf6d59e59",
+    "cartesian_nc_editor.py": "e689546af0e36eb0ff1c97e18031e48c46d6f4468b68850e2c49d46063ca0ffa",
+    "cartesian_nc_font.py": "6e031501e4441da56c96c9f72ddf37dfeaf7d60c23e60bb88e2f9b1c16c684f2",
+    "cartesian_nc_layout.py": "bbe62ed6465a6b2570e66af3b8091784c64b84958d09a1e94bc630182cce1e5d",
+    "cartesian_nc_log.py": "d1893b63a3516da4dd50529cb16bd4ad0709b452584fafed39fbe71807d785bd",
+    "cartesian_nc_model.py": "8411ecc9577dc7bd903ba2237ff244305f53df3baa0bc6309def30b0d3bbe2f5",
+    "cartesian_nc_path.py": "63b8cde91e6999674427dd906d5a36aca4b4040877f6d2d60050cc1b5892690d",
+    "cartesian_nc_protocol.py": "65ab688962cefba3893c8f87b035e7433155fba41f0f0540e55e600981af8bed",
+    "cartesian_nc_shapes.py": "c4ad1b42bb2309aa5607879c2b1ed320a00baf69b541c8f2b753b0cb401cccaf",
+    "cartesian_nc_upgrade.py": "43b08512b55373f3236423fbb7f263b764864dfea0daedc791d923913f04dc21",
+    "cartesian_nc_workspace.py": "608f9275876e860525155499de15e9b758d2fbf6f972b9d497dcd0cc9bb2c85a"
+  },
+  "real_log_audit": {
+    "drawings": 6,
+    "strokes": 21,
+    "closed_strokes": 11,
+    "closed_step_endpoint_errors": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "lost_buffer_events": 0,
+    "note": "Firmware counters are not encoder measurements; no physical motion was performed by agent"
+  },
+  "cleanup_validation": {
+    "source_layout": "Software/src",
+    "unit_tests": 44,
+    "gui_workflows": 5,
+    "native_firmware_tests_passed": true,
+    "packaged_offline_smoke_test_passed": true,
+    "firmware_image_unchanged": true
+  }
+}

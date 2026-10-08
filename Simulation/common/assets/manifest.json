@@ -1,0 +1,197 @@
+{
+  "source_repository": "https://github.com/madl3x/x-scara",
+  "source_commit": "3c7c17e3dc0805b41a3cac6d4cd2778d585d7ed2",
+  "license": "GPL-3.0",
+  "units": "m",
+  "assembly": "estimated Z stack and sidewall placement",
+  "physical_config_sha256": "d6fae92c826541dc05a050d20426a4a40f885d0f69c6c093a385fea3779d8a83",
+  "parts": [
+    {
+      "source": "Hardware/arm/STL/Black_Quantity1/Arm_Shoulder_Plate_Top_1.0.0.stl",
+      "sha256": "00ed6116c2cbd1ff411fa1b7cbdebc6b22f8c45ca6238aa29918f1e34896a5a4",
+      "output": "shoulder_black.stl",
+      "signs": [
+        -1,
+        -1,
+        1
+      ],
+      "translation_mm": [
+        0,
+        49,
+        97
+      ],
+      "y_scale": 1.0,
+      "triangles": 6446
+    },
+    {
+      "source": "Hardware/arm/STL/Black_Quantity1/Arm_Shoulder_Plate_Bottom_1.0.0.stl",
+      "sha256": "f24aa7d1467364717f42932a1da73deb7531b2470b857c6fd30a56de0755f25a",
+      "output": "shoulder_black.stl",
+      "signs": [
+        -1,
+        -1,
+        1
+      ],
+      "translation_mm": [
+        0,
+        44.5,
+        70
+      ],
+      "y_scale": 1.0,
+      "triangles": 6126
+    },
+    {
+      "source": "Hardware/arm/STL/Black_Quantity1/Arm_Elbow_Plate_Top_1.0.0.stl",
+      "sha256": "f88fcad5844971c42566384fa526e9cd84d4230f66db3f591ca3aaefbedbe1e7",
+      "output": "elbow_black.stl",
+      "signs": [
+        -1,
+        -1,
+        1
+      ],
+      "translation_mm": [
+        0,
+        43.327927,
+        67
+      ],
+      "y_scale": 1.0,
+      "triangles": 5876
+    },
+    {
+      "source": "Hardware/arm/STL/Black_Quantity1/Arm_Elbow_Plate_Bottom_1.0.0.stl",
+      "sha256": "1c1f603fa82aa5d3d23a592383ea85b560360fbf6698c01eb839eef61aa11ed6",
+      "output": "elbow_black.stl",
+      "signs": [
+        1,
+        1,
+        1
+      ],
+      "translation_mm": [
+        0,
+        43.327927,
+        40
+      ],
+      "y_scale": 1.0,
+      "triangles": 5268
+    },
+    {
+      "source": "Hardware/arm/STL/Black_Quantity2/Arm_Base_MotorPlate_1.1.2.stl",
+      "sha256": "36bc7591aa1a3a0105a0f45596a927e40b0a1608d4ecf622201d3d9debadd276",
+      "output": "carriage_black.stl",
+      "signs": [
+        -1,
+        -1,
+        1
+      ],
+      "translation_mm": [
+        36,
+        -3,
+        70
+      ],
+      "y_scale": 1,
+      "triangles": 7034
+    },
+    {
+      "source": "Hardware/arm/STL/Black_Quantity2/Arm_Base_MotorPlate_1.1.2.stl",
+      "sha256": "36bc7591aa1a3a0105a0f45596a927e40b0a1608d4ecf622201d3d9debadd276",
+      "output": "carriage_black.stl",
+      "signs": [
+        -1,
+        -1,
+        -1
+      ],
+      "translation_mm": [
+        36,
+        -3,
+        69
+      ],
+      "y_scale": 1,
+      "triangles": 7034
+    },
+    {
+      "source": "Hardware/arm/STL/Orange_Quantity2/Arm_SideWall_Left_1.0.0.stl",
+      "sha256": "0e7e6beb750fdf27b22e1b2a331b9190f71f130ba14374f8ef569f7a3a2dc172",
+      "output": "shoulder_orange.stl",
+      "signs": [
+        1,
+        1,
+        1
+      ],
+      "translation_mm": [
+        14,
+        46,
+        79
+      ],
+      "y_scale": 1.0,
+      "triangles": 916
+    },
+    {
+      "source": "Hardware/arm/STL/Orange_Quantity2/Arm_SideWall_Right_1.0.0.stl",
+      "sha256": "9a8725268df1777bc5485b6c5742d7c6975579d7cc4ebf1d31c0c26c5f01d6a8",
+      "output": "shoulder_orange.stl",
+      "signs": [
+        -1,
+        1,
+        1
+      ],
+      "translation_mm": [
+        -14,
+        46,
+        79
+      ],
+      "y_scale": 1.0,
+      "triangles": 916
+    },
+    {
+      "source": "Hardware/arm/STL/Orange_Quantity2/Arm_SideWall_Left_1.0.0.stl",
+      "sha256": "0e7e6beb750fdf27b22e1b2a331b9190f71f130ba14374f8ef569f7a3a2dc172",
+      "output": "elbow_orange.stl",
+      "signs": [
+        1,
+        1,
+        1
+      ],
+      "translation_mm": [
+        14,
+        46,
+        49
+      ],
+      "y_scale": 1.0,
+      "triangles": 916
+    },
+    {
+      "source": "Hardware/arm/STL/Orange_Quantity2/Arm_SideWall_Right_1.0.0.stl",
+      "sha256": "9a8725268df1777bc5485b6c5742d7c6975579d7cc4ebf1d31c0c26c5f01d6a8",
+      "output": "elbow_orange.stl",
+      "signs": [
+        -1,
+        1,
+        1
+      ],
+      "translation_mm": [
+        -14,
+        46,
+        49
+      ],
+      "y_scale": 1.0,
+      "triangles": 916
+    },
+    {
+      "source": "Hardware/arm/STL/Orange_Quantity1/Arm_Elbow_RodHub_1.0.0.stl",
+      "sha256": "12f18c91f0d0226254641acec502ad2be0e3c762b21716869c1f6f331422ae4f",
+      "output": "elbow_orange.stl",
+      "signs": [
+        1,
+        1,
+        1
+      ],
+      "translation_mm": [
+        0,
+        98.0,
+        49
+      ],
+      "y_scale": 1,
+      "triangles": 7096
+    }
+  ]
+}

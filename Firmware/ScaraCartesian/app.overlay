@@ -1,0 +1,76 @@
+/*
+ * Pin mapping cho module TB6600 (PUL-, DIR-, ENA- noi GND):
+ *   PA0 -> PUL+
+ *   PA1 -> DIR+
+ *   PA2 -> ENA+
+ *
+ * ENA la GPIO_ACTIVE_LOW: "logic 1" = driver duoc cho phep = chan PA2 ra muc THAP.
+ * (Voi TB6600, ENA+ co dong qua opto => driver bi TAT/offline.)
+ *
+ * Six dry NC switches: COM -> GND, NC -> GPIO; NO unused.
+ * Internal 3.3V pull-up: closed LOW, actuated/open wire HIGH.
+ */
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+	chosen {
+		zephyr,console = &usb_cdc_console;
+		zephyr,shell-uart = &usb_cdc_console;
+	};
+
+	zephyr,user {
+		pul-gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
+		dir-gpios = <&gpioa 1 GPIO_ACTIVE_HIGH>;
+		ena-gpios = <&gpioa 2 GPIO_ACTIVE_LOW>;
+		j1-pul-gpios = <&gpioa 8 GPIO_ACTIVE_HIGH>;
+		j1-dir-gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
+		j1-ena-gpios = <&gpiob 14 GPIO_ACTIVE_LOW>;
+		j2-pul-gpios = <&gpioa 6 GPIO_ACTIVE_HIGH>;
+		j2-dir-gpios = <&gpioa 7 GPIO_ACTIVE_HIGH>;
+		j2-ena-gpios = <&gpiob 13 GPIO_ACTIVE_LOW>;
+		z-pos-gpios = <&gpioa 3 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+		z-neg-gpios = <&gpioa 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+		j1-pos-gpios = <&gpiob 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+		j1-neg-gpios = <&gpiob 1 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+		j2-pos-gpios = <&gpiob 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+		j2-neg-gpios = <&gpiob 11 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+	};
+};
+
+/* Cong micro-USB Blue Pill: PA11 = D-, PA12 = D+.
+ * printk() xuat ra COM ao, khong can bo chuyen doi USB-UART. */
+&zephyr_udc0 {
+	status = "okay";
+	usb_cdc_console: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+/* ADC1 defaults to PA0 (PUL); keep all switch pins digital. */
+&adc1 { status = "disabled"; };
+
+/* PA4 is also SPI1 NSS. PB10/PB11 are USART3 and I2C2 by default. */
+&spi1 {
+	status = "disabled";
+};
+&spi2 { status = "disabled"; };
+&usart3 { status = "disabled"; };
+&i2c2 { status = "disabled"; };
+/* PA8/PB13/PB14/PB15 stay GPIO; the only pulse timer is shared TIM2. */
+&timers1 { status = "disabled"; };
+&pwm1 { status = "disabled"; };
+
+/* Board stm32_min_dev bat USART2 mac dinh tren PA2/PA3.
+ * Hai chan nay da danh cho ENA va cam bien; console chuyen sang USB CDC ACM. */
+&usart2 {
+	status = "disabled";
+};
+
+/* TIM2 at 72 MHz / 72 = 1 MHz. PA0 stays GPIO, no PWM pin remapping. */
+&timers2 {
+	status = "okay";
+	st,prescaler = <71>;
+	jog_timer: counter {
+		status = "okay";
+	};
+};

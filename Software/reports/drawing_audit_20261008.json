@@ -1,0 +1,1457 @@
+{
+  "file": "D:\\HK261\\Robot\\HPMR\\Scara Robot\\Software\\dist\\SCARA_Cartesian_NC_v5_R14\\logs\\cartesian_20261008_104801_16264_86b4eff2.jsonl",
+  "demo": false,
+  "config": {
+    "l1_mm": 98.0,
+    "l2_mm": 98.0,
+    "tool_offset_mm": [
+      0.0,
+      0.0
+    ],
+    "lead_mm_rev": 2.0,
+    "z_span_mm": 0.0,
+    "joint_limits_deg": [
+      [
+        -90.0,
+        90.0
+      ],
+      [
+        -90.0,
+        90.0
+      ]
+    ],
+    "park_deg": [
+      0.0,
+      45.0
+    ],
+    "z_clear_mm": 3.0,
+    "microsteps": [
+      16,
+      8,
+      8
+    ],
+    "ratios": [
+      3.0,
+      9.0
+    ],
+    "positive_high": [
+      true,
+      true,
+      false
+    ],
+    "coupling": 1.333333,
+    "auto_coupling": true,
+    "coupling_probe_pulses": 128,
+    "arm_home_pps": 200,
+    "j2_home_pps": 800,
+    "j2_latch_pps": 200,
+    "z_home_speed_mm_s": 3.0,
+    "z_latch_pps": 400,
+    "home_in_background": true,
+    "motion_in_background": true,
+    "arm_scan_pulses": 40000,
+    "z_scan_pulses": 300000,
+    "arm_backoff_pulses": 512,
+    "z_backoff_pulses": 1024,
+    "max_master_rate": 1600,
+    "max_joint_speed_deg_s": [
+      15.0,
+      10.0
+    ],
+    "max_z_speed_mm_s": 1.0
+  },
+  "status_frames": 9277,
+  "rejected_frames": 1,
+  "home": [
+    {
+      "epoch": 1,
+      "factors_pp_unit": [
+        1600.0,
+        26.2939453125,
+        39.41015625
+      ],
+      "range": [
+        87277,
+        4733,
+        7094
+      ],
+      "n1": [
+        87280,
+        4733,
+        7094
+      ],
+      "n2": [
+        87273,
+        4732,
+        7093
+      ],
+      "coupling": 0.338806,
+      "beta": 0.5078125,
+      "probe_da": 128,
+      "probe_db": 65,
+      "timer_late": 266
+    }
+  ],
+  "drawings": [
+    {
+      "pattern": "HEART",
+      "settings": {
+        "size_mm": 46.32,
+        "center_x": 0.0,
+        "center_y": 165.0,
+        "paper_z": 20.0,
+        "lift_mm": 2.0,
+        "draw_speed": 12.0,
+        "travel_speed": 12.0,
+        "step_mm": 0.75,
+        "tolerance_mm": 0.25,
+        "pattern": "HEART",
+        "settle_s": 0.12
+      },
+      "model_error_mm": 0.13981547508838948,
+      "strokes": [
+        {
+          "job": 6,
+          "start_steps": [
+            32000,
+            -1146,
+            2854
+          ],
+          "target_steps": [
+            32000,
+            -1146,
+            2854
+          ],
+          "commanded_closed": true,
+          "segments": 280,
+          "expected_axis_pulses": [
+            0,
+            2002,
+            4886
+          ],
+          "direction_reversals": [
+            0,
+            3,
+            3
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            256887,
+            16119,
+            74474
+          ],
+          "end_steps": [
+            32000,
+            -1146,
+            2854
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 24.327999999999975,
+          "predicted_s": 23.272795847444154,
+          "reported_axis_pulses": [
+            0,
+            2002,
+            4886
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "completed": true,
+      "timer_late_at_start": 266,
+      "measured_factors": [
+        1600.0,
+        26.2939453125,
+        39.41015625
+      ],
+      "coupling": 0.338806,
+      "elapsed_s": 40.047000000000025,
+      "timer_late_at_end": 266,
+      "starved": 0
+    },
+    {
+      "pattern": "CIRCLE",
+      "settings": {
+        "size_mm": 46.09,
+        "center_x": 0.0,
+        "center_y": 165.0,
+        "paper_z": 20.0,
+        "lift_mm": 2.0,
+        "draw_speed": 12.0,
+        "travel_speed": 12.0,
+        "step_mm": 0.75,
+        "tolerance_mm": 0.25,
+        "pattern": "CIRCLE",
+        "settle_s": 0.12
+      },
+      "model_error_mm": 0.1387041778928038,
+      "strokes": [
+        {
+          "job": 10,
+          "start_steps": [
+            32000,
+            -431,
+            1072
+          ],
+          "target_steps": [
+            32000,
+            -431,
+            1072
+          ],
+          "commanded_closed": true,
+          "segments": 256,
+          "expected_axis_pulses": [
+            0,
+            1658,
+            3590
+          ],
+          "direction_reversals": [
+            0,
+            2,
+            2
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            263287,
+            18836,
+            81142
+          ],
+          "end_steps": [
+            32000,
+            -431,
+            1072
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 20.0,
+          "predicted_s": 18.882222394682664,
+          "reported_axis_pulses": [
+            0,
+            1658,
+            3590
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "completed": true,
+      "timer_late_at_start": 266,
+      "measured_factors": [
+        1600.0,
+        26.2939453125,
+        39.41015625
+      ],
+      "coupling": 0.338806,
+      "elapsed_s": 34.608999999999924,
+      "timer_late_at_end": 266,
+      "starved": 0
+    },
+    {
+      "pattern": "BK",
+      "settings": {
+        "size_mm": 46.09,
+        "center_x": 0.0,
+        "center_y": 165.0,
+        "paper_z": 20.0,
+        "lift_mm": 2.0,
+        "draw_speed": 12.0,
+        "travel_speed": 12.0,
+        "step_mm": 0.75,
+        "tolerance_mm": 0.25,
+        "pattern": "BK",
+        "settle_s": 0.12
+      },
+      "model_error_mm": 0.15106811361096106,
+      "strokes": [
+        {
+          "job": 14,
+          "start_steps": [
+            32000,
+            -207,
+            1066
+          ],
+          "target_steps": [
+            32000,
+            -207,
+            1066
+          ],
+          "commanded_closed": true,
+          "segments": 190,
+          "expected_axis_pulses": [
+            0,
+            1562,
+            3718
+          ],
+          "direction_reversals": [
+            0,
+            3,
+            1
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            269687,
+            20718,
+            84738
+          ],
+          "end_steps": [
+            32000,
+            -207,
+            1066
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 19.96900000000005,
+          "predicted_s": 18.963488154617995,
+          "reported_axis_pulses": [
+            0,
+            1562,
+            3718
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 18,
+          "start_steps": [
+            32000,
+            -431,
+            1072
+          ],
+          "target_steps": [
+            32000,
+            -1146,
+            2854
+          ],
+          "commanded_closed": false,
+          "segments": 62,
+          "expected_axis_pulses": [
+            0,
+            715,
+            1782
+          ],
+          "direction_reversals": [
+            0,
+            0,
+            0
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            276087,
+            22504,
+            88462
+          ],
+          "end_steps": [
+            32000,
+            -1146,
+            2854
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 9.313000000000102,
+          "predicted_s": 8.219428539325135,
+          "reported_axis_pulses": [
+            0,
+            715,
+            1782
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 22,
+          "start_steps": [
+            32000,
+            -574,
+            879
+          ],
+          "target_steps": [
+            32000,
+            -1368,
+            2679
+          ],
+          "commanded_closed": false,
+          "segments": 88,
+          "expected_axis_pulses": [
+            0,
+            794,
+            1800
+          ],
+          "direction_reversals": [
+            0,
+            0,
+            0
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            282487,
+            23791,
+            92219
+          ],
+          "end_steps": [
+            32000,
+            -1368,
+            2679
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 10.375,
+          "predicted_s": 9.345735192729583,
+          "reported_axis_pulses": [
+            0,
+            794,
+            1800
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "completed": true,
+      "timer_late_at_start": 266,
+      "measured_factors": [
+        1600.0,
+        26.2939453125,
+        39.41015625
+      ],
+      "coupling": 0.338806,
+      "elapsed_s": 71.79700000000003,
+      "timer_late_at_end": 266,
+      "starved": 0
+    },
+    {
+      "pattern": "LINH",
+      "settings": {
+        "size_mm": 46.09,
+        "center_x": 0.0,
+        "center_y": 165.0,
+        "paper_z": 20.0,
+        "lift_mm": 2.0,
+        "draw_speed": 12.0,
+        "travel_speed": 12.0,
+        "step_mm": 0.75,
+        "tolerance_mm": 0.25,
+        "pattern": "LINH",
+        "settle_s": 0.12
+      },
+      "model_error_mm": 0.1391057913742877,
+      "strokes": [
+        {
+          "job": 26,
+          "start_steps": [
+            32000,
+            -539,
+            1947
+          ],
+          "target_steps": [
+            32000,
+            -800,
+            2398
+          ],
+          "commanded_closed": false,
+          "segments": 29,
+          "expected_axis_pulses": [
+            0,
+            261,
+            467
+          ],
+          "direction_reversals": [
+            0,
+            0,
+            1
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            288887,
+            25414,
+            94751
+          ],
+          "end_steps": [
+            32000,
+            -800,
+            2398
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 4.686999999999898,
+          "predicted_s": 3.7760234039994254,
+          "reported_axis_pulses": [
+            0,
+            261,
+            467
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 30,
+          "start_steps": [
+            32000,
+            -667,
+            1941
+          ],
+          "target_steps": [
+            32000,
+            -749,
+            1914
+          ],
+          "commanded_closed": false,
+          "segments": 12,
+          "expected_axis_pulses": [
+            0,
+            82,
+            27
+          ],
+          "direction_reversals": [
+            0,
+            0,
+            0
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            295287,
+            25808,
+            95675
+          ],
+          "end_steps": [
+            32000,
+            -749,
+            1914
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 1.844000000000051,
+          "predicted_s": 1.2884870744508226,
+          "reported_axis_pulses": [
+            0,
+            82,
+            27
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 34,
+          "start_steps": [
+            32000,
+            -709,
+            1930
+          ],
+          "target_steps": [
+            32000,
+            -883,
+            2376
+          ],
+          "commanded_closed": false,
+          "segments": 17,
+          "expected_axis_pulses": [
+            0,
+            174,
+            446
+          ],
+          "direction_reversals": [
+            0,
+            0,
+            0
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            301687,
+            25930,
+            95718
+          ],
+          "end_steps": [
+            32000,
+            -883,
+            2376
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 3.094000000000051,
+          "predicted_s": 2.385453166979883,
+          "reported_axis_pulses": [
+            0,
+            174,
+            446
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 38,
+          "start_steps": [
+            32000,
+            -839,
+            2390
+          ],
+          "target_steps": [
+            32000,
+            -926,
+            2359
+          ],
+          "commanded_closed": false,
+          "segments": 12,
+          "expected_axis_pulses": [
+            0,
+            87,
+            31
+          ],
+          "direction_reversals": [
+            0,
+            0,
+            0
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            308087,
+            26148,
+            96178
+          ],
+          "end_steps": [
+            32000,
+            -926,
+            2359
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 1.7660000000000764,
+          "predicted_s": 1.317217181511777,
+          "reported_axis_pulses": [
+            0,
+            87,
+            31
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 42,
+          "start_steps": [
+            32000,
+            -961,
+            2341
+          ],
+          "target_steps": [
+            32000,
+            -854,
+            1846
+          ],
+          "commanded_closed": false,
+          "segments": 55,
+          "expected_axis_pulses": [
+            0,
+            623,
+            1275
+          ],
+          "direction_reversals": [
+            0,
+            2,
+            2
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            314487,
+            26270,
+            96227
+          ],
+          "end_steps": [
+            32000,
+            -854,
+            1846
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 8.217999999999847,
+          "predicted_s": 7.191487950333378,
+          "reported_axis_pulses": [
+            0,
+            623,
+            1275
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 46,
+          "start_steps": [
+            32000,
+            -1071,
+            2260
+          ],
+          "target_steps": [
+            32000,
+            -882,
+            1819
+          ],
+          "commanded_closed": false,
+          "segments": 17,
+          "expected_axis_pulses": [
+            0,
+            189,
+            441
+          ],
+          "direction_reversals": [
+            0,
+            0,
+            0
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            320887,
+            27110,
+            97916
+          ],
+          "end_steps": [
+            32000,
+            -882,
+            1819
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 3.094000000000051,
+          "predicted_s": 2.3890253760371336,
+          "reported_axis_pulses": [
+            0,
+            189,
+            441
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 50,
+          "start_steps": [
+            32000,
+            -980,
+            2050
+          ],
+          "target_steps": [
+            32000,
+            -1045,
+            1975
+          ],
+          "commanded_closed": false,
+          "segments": 12,
+          "expected_axis_pulses": [
+            0,
+            65,
+            75
+          ],
+          "direction_reversals": [
+            0,
+            0,
+            0
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            327287,
+            27397,
+            98588
+          ],
+          "end_steps": [
+            32000,
+            -1045,
+            1975
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 1.780999999999949,
+          "predicted_s": 1.255884980911069,
+          "reported_axis_pulses": [
+            0,
+            65,
+            75
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 54,
+          "start_steps": [
+            32000,
+            -1139,
+            2185
+          ],
+          "target_steps": [
+            32000,
+            -942,
+            1742
+          ],
+          "commanded_closed": false,
+          "segments": 17,
+          "expected_axis_pulses": [
+            0,
+            197,
+            443
+          ],
+          "direction_reversals": [
+            0,
+            0,
+            0
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            333687,
+            27556,
+            98873
+          ],
+          "end_steps": [
+            32000,
+            -942,
+            1742
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 3.0779999999999745,
+          "predicted_s": 2.4091840542038403,
+          "reported_axis_pulses": [
+            0,
+            197,
+            443
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "completed": true,
+      "timer_late_at_start": 266,
+      "measured_factors": [
+        1600.0,
+        26.2939453125,
+        39.41015625
+      ],
+      "coupling": 0.338806,
+      "elapsed_s": 89.78099999999995,
+      "timer_late_at_end": 266,
+      "starved": 0
+    },
+    {
+      "pattern": "STAR",
+      "settings": {
+        "size_mm": 46.09,
+        "center_x": 0.0,
+        "center_y": 165.0,
+        "paper_z": 20.0,
+        "lift_mm": 2.0,
+        "draw_speed": 12.0,
+        "travel_speed": 12.0,
+        "step_mm": 0.75,
+        "tolerance_mm": 0.25,
+        "pattern": "STAR",
+        "settle_s": 0.12
+      },
+      "model_error_mm": 0.13669432608248638,
+      "strokes": [
+        {
+          "job": 58,
+          "start_steps": [
+            32000,
+            -460,
+            1146
+          ],
+          "target_steps": [
+            32000,
+            -460,
+            1146
+          ],
+          "commanded_closed": true,
+          "segments": 230,
+          "expected_axis_pulses": [
+            0,
+            1962,
+            4064
+          ],
+          "direction_reversals": [
+            0,
+            3,
+            5
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            340087,
+            28235,
+            99912
+          ],
+          "end_steps": [
+            32000,
+            -460,
+            1146
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 27.84400000000005,
+          "predicted_s": 26.77849687595149,
+          "reported_axis_pulses": [
+            0,
+            1962,
+            4064
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "completed": true,
+      "timer_late_at_start": 266,
+      "measured_factors": [
+        1600.0,
+        26.2939453125,
+        39.41015625
+      ],
+      "coupling": 0.338806,
+      "elapsed_s": 37.75,
+      "timer_late_at_end": 266,
+      "starved": 0
+    },
+    {
+      "pattern": "FLOWER",
+      "settings": {
+        "size_mm": 41.07,
+        "center_x": 0.0,
+        "center_y": 165.0,
+        "paper_z": 20.0,
+        "lift_mm": 2.0,
+        "draw_speed": 12.0,
+        "travel_speed": 12.0,
+        "step_mm": 0.75,
+        "tolerance_mm": 0.25,
+        "pattern": "FLOWER",
+        "settle_s": 0.12
+      },
+      "model_error_mm": 0.14348477341678673,
+      "strokes": [
+        {
+          "job": 62,
+          "start_steps": [
+            32000,
+            -791,
+            1969
+          ],
+          "target_steps": [
+            32000,
+            -791,
+            1969
+          ],
+          "commanded_closed": true,
+          "segments": 98,
+          "expected_axis_pulses": [
+            0,
+            732,
+            1794
+          ],
+          "direction_reversals": [
+            0,
+            1,
+            1
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            346487,
+            30528,
+            104799
+          ],
+          "end_steps": [
+            32000,
+            -791,
+            1969
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 9.735000000000127,
+          "predicted_s": 8.722806944118405,
+          "reported_axis_pulses": [
+            0,
+            732,
+            1794
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 66,
+          "start_steps": [
+            32000,
+            -789,
+            2072
+          ],
+          "target_steps": [
+            32000,
+            -789,
+            2072
+          ],
+          "commanded_closed": true,
+          "segments": 98,
+          "expected_axis_pulses": [
+            0,
+            626,
+            1050
+          ],
+          "direction_reversals": [
+            0,
+            1,
+            2
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            352887,
+            31262,
+            106696
+          ],
+          "end_steps": [
+            32000,
+            -789,
+            2072
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 7.5470000000000255,
+          "predicted_s": 6.456526578701276,
+          "reported_axis_pulses": [
+            0,
+            626,
+            1050
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 70,
+          "start_steps": [
+            32000,
+            -854,
+            2236
+          ],
+          "target_steps": [
+            32000,
+            -854,
+            2236
+          ],
+          "commanded_closed": true,
+          "segments": 98,
+          "expected_axis_pulses": [
+            0,
+            368,
+            882
+          ],
+          "direction_reversals": [
+            0,
+            2,
+            2
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            359287,
+            31953,
+            107910
+          ],
+          "end_steps": [
+            32000,
+            -854,
+            2236
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 6.8279999999999745,
+          "predicted_s": 5.754379790684424,
+          "reported_axis_pulses": [
+            0,
+            368,
+            882
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 74,
+          "start_steps": [
+            32000,
+            -922,
+            2297
+          ],
+          "target_steps": [
+            32000,
+            -922,
+            2297
+          ],
+          "commanded_closed": true,
+          "segments": 98,
+          "expected_axis_pulses": [
+            0,
+            486,
+            1118
+          ],
+          "direction_reversals": [
+            0,
+            2,
+            1
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            365687,
+            32389,
+            108853
+          ],
+          "end_steps": [
+            32000,
+            -922,
+            2297
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 7.092999999999847,
+          "predicted_s": 6.120291110356971,
+          "reported_axis_pulses": [
+            0,
+            486,
+            1118
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 78,
+          "start_steps": [
+            32000,
+            -927,
+            2198
+          ],
+          "target_steps": [
+            32000,
+            -927,
+            2198
+          ],
+          "commanded_closed": true,
+          "segments": 98,
+          "expected_axis_pulses": [
+            0,
+            542,
+            772
+          ],
+          "direction_reversals": [
+            0,
+            1,
+            2
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            372087,
+            32880,
+            110070
+          ],
+          "end_steps": [
+            32000,
+            -927,
+            2198
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 6.9220000000000255,
+          "predicted_s": 5.787614378177784,
+          "reported_axis_pulses": [
+            0,
+            542,
+            772
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 82,
+          "start_steps": [
+            32000,
+            -861,
+            2035
+          ],
+          "target_steps": [
+            32000,
+            -861,
+            2035
+          ],
+          "commanded_closed": true,
+          "segments": 98,
+          "expected_axis_pulses": [
+            0,
+            418,
+            1164
+          ],
+          "direction_reversals": [
+            0,
+            2,
+            2
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            378487,
+            33488,
+            111005
+          ],
+          "end_steps": [
+            32000,
+            -861,
+            2035
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 7.608999999999924,
+          "predicted_s": 6.427591762552371,
+          "reported_axis_pulses": [
+            0,
+            418,
+            1164
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "job": 86,
+          "start_steps": [
+            32000,
+            -812,
+            2021
+          ],
+          "target_steps": [
+            32000,
+            -812,
+            2021
+          ],
+          "commanded_closed": true,
+          "segments": 32,
+          "expected_axis_pulses": [
+            0,
+            218,
+            460
+          ],
+          "direction_reversals": [
+            0,
+            2,
+            1
+          ],
+          "constant_z": true,
+          "timer_late_at_start": 266,
+          "start_total": [
+            384887,
+            33955,
+            112183
+          ],
+          "end_steps": [
+            32000,
+            -812,
+            2021
+          ],
+          "step_endpoint_error": [
+            0,
+            0,
+            0
+          ],
+          "timer_late_delta": 0,
+          "starved": 0,
+          "elapsed_s": 4.0,
+          "predicted_s": 2.9246066884317075,
+          "reported_axis_pulses": [
+            0,
+            218,
+            460
+          ],
+          "axis_pulse_error": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "completed": true,
+      "timer_late_at_start": 266,
+      "measured_factors": [
+        1600.0,
+        26.2939453125,
+        39.41015625
+      ],
+      "coupling": 0.338806,
+      "elapsed_s": 100.0619999999999,
+      "timer_late_at_end": 266,
+      "starved": 0
+    }
+  ],
+  "limitations": [
+    "Measured pulse/angle factors assume the configured switch endpoint angles; those angles were not measured by this log.",
+    "Telemetry counts commanded pulses, not encoder position. Backlash, missed driver pulses/steps, pen flex/contact and actual dimensions are not measured."
+  ]
+}

@@ -1,0 +1,7 @@
+circle: RMS 0.000088 mm, MAX 0.000483 mm, normal force 0.4802 N
+flower: RMS 0.000150 mm, MAX 0.000479 mm, normal force 0.4802 N
+square: RMS 0.000094 mm, MAX 0.000616 mm, normal force 0.4802 N
+D:\HK261\Robot\HPMR\Scara Robot\Simulation\common\trajectories\example_drawing.csv: RMS 0.001012 mm, MAX 0.004699 mm, normal force 0.4805 N
+Simulink vs MATLAB maximum state difference: 2.44e-15
+PASS: geometry, dynamics, STL rendering and simulation checks.
+PID XY RMS 1.14063 mm | PID + feedforward XY RMS 0.00015 mm

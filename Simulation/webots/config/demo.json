@@ -1,0 +1,16 @@
+{
+  "trajectory": "flower",
+  "csv": "common/trajectories/example_drawing.csv",
+  "control_mode": "position",
+  "feedforward": true,
+  "time_scale": 1.0,
+  "warmup_seconds": 2.0,
+  "settle_seconds": 0.5,
+  "velocity_filter_hz": 30.0,
+  "ink_color": "#172A46",
+  "ink_density": 0.9,
+  "minimum_contact_force_N": 0.02,
+  "maximum_tip_height_m": 0.0004,
+  "log_every_steps": 5,
+  "quit_when_done": false
+}

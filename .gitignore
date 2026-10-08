@@ -1,0 +1,44 @@
+# Local recovery backup (not part of the project)
+.cleanup_backup/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Software: PyInstaller output, packaging cache, session logs
+Software/build/
+Software/dist/
+Software/.packaging/
+Software/logs/
+*.jsonl
+
+# Firmware build output (Zephyr / STM32CubeIDE)
+Firmware/ScaraCartesian/build*/
+Firmware/Ref/Debug/
+Firmware/Ref/Release/
+
+# MATLAB / Simulink generated files
+slprj/
+*.slxc
+*.slx.autosave
+*.slx.r20*
+*.asv
+*.mex*
+.matlab_prefs/
+Simulation/matlab/output/cache/
+Simulation/matlab/output/codegen/
+Simulation/matlab/output/data/
+
+# Webots run output
+Simulation/webots/output/runs/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store

@@ -1,0 +1,4 @@
+[Warning: The model name 'scara_brush' is shadowing another name in the MATLAB workspace or path. Type "which -all scara_brush" at the command line to find the other uses of this
+name. You should change the name of the model to avoid problems.] 
+[> In build_scara_simulink (line 11)] 
+FINAL_UI_AND_MODEL_PASS

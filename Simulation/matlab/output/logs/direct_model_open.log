@@ -1,0 +1,6 @@
+  FileGenConfig with properties:
+
+               CacheFolder: 'D:\HK261\Robot\HPMR\Scara Robot\Simulation\matlab\output\cache'
+             CodeGenFolder: 'D:\HK261\Robot\HPMR\Scara Robot\Simulation\matlab\output\codegen'
+    CodeGenFolderStructure: ModelSpecific
+
