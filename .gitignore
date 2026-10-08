@@ -1,6 +1,9 @@
 # Local recovery backup (not part of the project)
 .cleanup_backup/
 
+# Original phone photos/video; web-optimized copies live in media/
+Img and Video/
+
 # Python
 __pycache__/
 *.py[cod]

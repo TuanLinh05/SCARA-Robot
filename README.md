@@ -13,7 +13,11 @@ mô phỏng MATLAB/Simulink và Webots.
 ![MATLAB](https://img.shields.io/badge/MATLAB-R2026a-E16737?logo=mathworks)
 ![Webots](https://img.shields.io/badge/Webots-R2025a-D52626)
 
-<img src="Simulation/matlab/output/figures/scara_3d.png" alt="Mô hình 3D X-SCARA vẽ hình hoa trên giấy 100×100 mm" width="520">
+<img src="media/drawing-demo.gif" alt="Robot đang vẽ hoa 6 cánh, bên cạnh chữ LINH và ngôi sao đã vẽ" height="420">
+&nbsp;
+<img src="media/robot-wired.jpg" alt="Robot SCARA đã lắp ráp và đấu dây" height="420">
+
+<sub>Robot thật vẽ hoa 6 cánh (GIF tua nhanh 2×) · [Xem video gốc](media/drawing-demo.mp4)</sub>
 
 </div>
 
@@ -21,6 +25,7 @@ mô phỏng MATLAB/Simulink và Webots.
 
 ## Mục lục
 
+- [Demo](#demo)
 - [Giới thiệu](#giới-thiệu)
 - [Tính năng](#tính-năng)
 - [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
@@ -32,6 +37,18 @@ mô phỏng MATLAB/Simulink và Webots.
 - [Hạn chế đã biết](#hạn-chế-đã-biết)
 - [Tài liệu](#tài-liệu)
 - [Nguồn tham khảo & giấy phép](#nguồn-tham-khảo--giấy-phép)
+
+## Demo
+
+Video robot vẽ hoa 6 cánh bằng GUI, trên tờ giấy đã có chữ **LINH** và ngôi
+sao vẽ từ các lần chạy trước: [`media/drawing-demo.mp4`](media/drawing-demo.mp4).
+
+| Robot đã đấu dây | Khung, trục Z và 3 driver | Driver TB6600 |
+| :---: | :---: | :---: |
+| <img src="media/robot-wired.jpg" alt="Robot đã đấu dây" width="260"> | <img src="media/robot-side-1.jpg" alt="Mặt bên robot với ba driver TB6600" width="260"> | <img src="media/tb6600-driver.jpg" alt="Bảng cài vi bước và dòng của TB6600" width="260"> |
+
+Thêm ảnh mặt bên: [1](media/robot-side-1.jpg) · [2](media/robot-side-2.jpg) ·
+[3](media/robot-side-3.jpg) · [4](media/robot-side-4.jpg).
 
 ## Giới thiệu
 
@@ -132,7 +149,8 @@ từ số xung đã phát (robot không có encoder).
 │   ├── 3D Print/             STL xếp theo màu/số lượng in
 │   ├── arm/, frame/          STL gốc, BOM, ảnh lắp ráp của X-SCARA
 │   └── Pen_Holder_EG118/     Giá kẹp bút (SCAD, Python, STL)
-└── Doc/                      Đánh giá firmware và nguyên nhân sai lệch nét vẽ
+├── Doc/                      Đánh giá firmware và nguyên nhân sai lệch nét vẽ
+└── media/                    Ảnh và video robot thật
 ```
 
 ## Phần cứng
@@ -217,7 +235,9 @@ MATLAB không cần Robotics System Toolbox hay Simscape Multibody. Simulink
 chỉ cần khi mở file `.slx`.
 
 <div align="center">
-<img src="Simulation/matlab/output/figures/app_ui.png" alt="Giao diện mô phỏng MATLAB" width="720">
+<img src="Simulation/matlab/output/figures/scara_3d.png" alt="Mô hình 3D X-SCARA vẽ hình hoa trên giấy 100×100 mm" height="360">
+&nbsp;
+<img src="Simulation/matlab/output/figures/app_ui.png" alt="Giao diện mô phỏng MATLAB" height="360">
 </div>
 
 ## Kiểm thử
