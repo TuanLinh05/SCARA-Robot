@@ -73,12 +73,12 @@ that draws shapes and text on paper.
 | Transmission | 2GT belts (J1, J2), Tr8 lead screw with 2 mm lead (Z) |
 | Motors / drivers | 3 × NEMA 17 + 3 × TB6600 (STEP/DIR) |
 | Microcontroller | STM32F103C8 (Blue Pill), USB CDC link to the PC |
-| Homing | 6 limit switches (both ends of every axis, COM–NC wiring) |
+| Homing | 6 limit switches (both ends of every axis, COM-NC wiring) |
 | Default drawing area | 100 × 100 mm paper |
 
 ## Features
 
-**Firmware** — [`Firmware/ScaraCartesian`](Firmware/ScaraCartesian)
+**Firmware** - [`Firmware/ScaraCartesian`](Firmware/ScaraCartesian)
 - Zephyr 3.7, build `SCARA_CART_NC_HOME_V5_R9`, protocol 5.
 - Automatic HOME/CALIB: sweeps both ends of every axis and measures the elbow
   coupling ratio `k = dB/dA`.
@@ -88,7 +88,7 @@ that draws shapes and text on paper.
   heartbeat, USB loss, GPIO readback and buffer underrun. Any fault clears the
   home reference and stops the robot.
 
-**Control GUI** — [`Software`](Software)
+**Control GUI** - [`Software`](Software)
 - Python 3.12 + Tkinter + pyserial. A `--demo` mode runs without a robot.
 - Forward/inverse kinematics, reach checks, and a preflight of every stroke
   before anything is sent.
@@ -98,12 +98,12 @@ that draws shapes and text on paper.
   pen lifts between strokes.
 - JSONL session logs and a log analysis tool (`cartesian_nc_audit.py`).
 
-**Simulation** — [`Simulation`](Simulation)
+**Simulation** - [`Simulation`](Simulation)
 - MATLAB/Simulink: FK/IK, dynamics, PID + feedforward, a 3D app built from the STL files.
-- Webots: rigid-body physics, pen–paper contact, a Python controller that uses only the standard library.
+- Webots: rigid-body physics, pen-paper contact, a Python controller that uses only the standard library.
 - Both environments share one parameter file (`common/config/scara.json`) and the same CSV trajectories.
 
-**Hardware** — [`Hardware`](Hardware)
+**Hardware** - [`Hardware`](Hardware)
 - Print list for all 38 parts by color and quantity, mechanical BOMs, assembly images.
 - Deli EG118 pen holder: OpenSCAD + Python source and ready-to-print STL files.
 
@@ -169,7 +169,7 @@ unchanged. See the original repository for the latest design and full assembly g
 
 ### Wiring
 
-The TB6600 inputs are wired common-cathode: PUL−, DIR− and ENA− go to a shared GND.
+The TB6600 inputs are wired common-cathode: PUL-, DIR- and ENA- go to a shared GND.
 
 | Axis | PUL+ | DIR+ | ENA+ | Limit switch (DIR HIGH end) | Limit switch (DIR LOW end) |
 | --- | --- | --- | --- | --- | --- |
@@ -177,7 +177,7 @@ The TB6600 inputs are wired common-cathode: PUL−, DIR− and ENA− go to a sh
 | J1 | PA8 | PB15 | PB14 | PB0  | PB1  |
 | J2 | PA6 | PA7  | PB13 | PB10 | PB11 |
 
-Switches use **COM–NC**: COM → GND, NC → GPIO (pulled up to 3.3 V), NO left open.
+Switches use **COM-NC**: COM → GND, NC → GPIO (pulled up to 3.3 V), NO left open.
 The input reads LOW normally and HIGH when the switch is pressed or a wire
 breaks, so a broken wire is also treated as a fault.
 
@@ -273,7 +273,7 @@ Analysis of logs from the real hardware (6 homing runs, 58 strokes) shows:
 
 - The firmware assumes the two switches of each joint are exactly 180° apart.
   The measured span is about **177.5°**, so the angle scale is off by about 1.4%.
-  The pen tip lands 0.8–6 mm off and circles distort by 0.2–0.9 mm.
+  The pen tip lands 0.8-6 mm off and circles distort by 0.2-0.9 mm.
 - The elbow coupling ratio `k` is re-measured from about 64 steps at every
   homing run, so it varies by ±1.6%. The mechanical value is **1/3**.
 - Visibly kinked or curved straight lines are usually caused by backlash (belts,
@@ -359,12 +359,12 @@ hình và chữ lên giấy.
 | Truyền động | Đai 2GT (J1, J2), vít me Tr8 bước 2 mm (Z) |
 | Động cơ / driver | 3 × NEMA 17 + 3 × TB6600 (STEP/DIR) |
 | Vi điều khiển | STM32F103C8 (Blue Pill), giao tiếp USB CDC |
-| Gốc tọa độ | 6 công tắc hành trình (2 biên mỗi trục, kiểu COM–NC) |
+| Gốc tọa độ | 6 công tắc hành trình (2 biên mỗi trục, kiểu COM-NC) |
 | Vùng vẽ mặc định | Giấy 100 × 100 mm |
 
 ## Tính năng
 
-**Firmware** — [`Firmware/ScaraCartesian`](Firmware/ScaraCartesian)
+**Firmware** - [`Firmware/ScaraCartesian`](Firmware/ScaraCartesian)
 - Zephyr 3.7, bản dựng `SCARA_CART_NC_HOME_V5_R9`, protocol 5.
 - HOME/CALIB tự động: quét hai biên mỗi trục, đo hệ số ghép khuỷu `k = dB/dA`.
 - Phát xung bằng ngắt TIM2 1 MHz, nội suy DDA cho 3 trục.
@@ -372,7 +372,7 @@ hình và chữ lên giấy.
 - An toàn: kiểm tra 6 công tắc ở mỗi cạnh xung, giới hạn mềm, heartbeat 350 ms,
   mất USB, readback GPIO, cạn bộ đệm. Mọi lỗi đều hủy mốc và dừng.
 
-**GUI điều khiển** — [`Software`](Software)
+**GUI điều khiển** - [`Software`](Software)
 - Python 3.12 + Tkinter + pyserial. Có chế độ `--demo` không cần robot.
 - Động học thuận/ngược (FK/IK), kiểm tra vùng với tới, preflight toàn bộ nét
   trước khi gửi.
@@ -381,12 +381,12 @@ hình và chữ lên giấy.
   vuông, tam giác, hình thoi. Tự co giãn vừa vùng vẽ, nâng bút giữa các nét.
 - Ghi log phiên dạng JSONL và công cụ phân tích log (`cartesian_nc_audit.py`).
 
-**Mô phỏng** — [`Simulation`](Simulation)
+**Mô phỏng** - [`Simulation`](Simulation)
 - MATLAB/Simulink: FK/IK, động lực học, PID + feedforward, giao diện 3D từ STL.
-- Webots: vật lý vật rắn, tiếp xúc bút–giấy, controller Python chỉ dùng thư viện chuẩn.
+- Webots: vật lý vật rắn, tiếp xúc bút-giấy, controller Python chỉ dùng thư viện chuẩn.
 - Hai môi trường dùng chung tham số (`common/config/scara.json`) và quỹ đạo CSV.
 
-**Phần cứng** — [`Hardware`](Hardware)
+**Phần cứng** - [`Hardware`](Hardware)
 - Danh sách 38 bản in 3D theo màu/số lượng, BOM cơ khí, ảnh hướng dẫn lắp ráp.
 - Giá kẹp bút Deli EG118: mã nguồn OpenSCAD + Python, STL sẵn để in.
 
@@ -452,7 +452,7 @@ Xem repo gốc để có bản thiết kế mới nhất và hướng dẫn lắ
 
 ### Đấu dây
 
-TB6600 nối kiểu chung âm: PUL−, DIR−, ENA− nối GND chung.
+TB6600 nối kiểu chung âm: PUL-, DIR-, ENA- nối GND chung.
 
 | Trục | PUL+ | DIR+ | ENA+ | Công tắc biên (DIR HIGH) | Công tắc biên (DIR LOW) |
 | --- | --- | --- | --- | --- | --- |
@@ -460,7 +460,7 @@ TB6600 nối kiểu chung âm: PUL−, DIR−, ENA− nối GND chung.
 | J1 | PA8 | PB15 | PB14 | PB0  | PB1  |
 | J2 | PA6 | PA7  | PB13 | PB10 | PB11 |
 
-Công tắc nối **COM–NC**: COM → GND, NC → GPIO (kéo lên 3,3 V), chân NO bỏ trống.
+Công tắc nối **COM-NC**: COM → GND, NC → GPIO (kéo lên 3,3 V), chân NO bỏ trống.
 Bình thường đọc LOW; khi chạm công tắc hoặc đứt dây đọc HIGH, nên đứt dây
 cũng được coi là lỗi an toàn.
 
@@ -554,7 +554,7 @@ Phân tích log phần cứng thật (6 lần HOME, 58 nét vẽ) cho thấy:
 
 - Firmware giả định hai công tắc của mỗi khớp cách nhau đúng 180°, trong khi
   đo thực tế khoảng **177,5°**. Thang góc vì vậy sai khoảng 1,4%: đầu bút
-  lệch 0,8–6 mm, đường tròn méo 0,2–0,9 mm.
+  lệch 0,8-6 mm, đường tròn méo 0,2-0,9 mm.
 - Hệ số ghép khuỷu `k` được đo lại mỗi lần HOME từ khoảng 64 xung nên dao
   động ±1,6%. Giá trị đúng theo cơ khí là **1/3**.
 - Nét thẳng bị gãy hoặc cong thấy rõ thường do độ rơ (đai, giá bút), không phải do firmware.
