@@ -1,7 +1,6 @@
-#include "cart_core.h"
+#include "cart_core_internal.h"
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <limits.h>
 static int sign64(int64_t x) { return (x > 0) - (x < 0); }
 static int64_t rounded(int64_t x, int64_t d)
@@ -109,7 +108,7 @@ void ct_sample(struct ct_state *c, unsigned a, int positive, int negative, uint3
         }
     }
 }
-static const char *inputs(struct ct_state *c, uint32_t now)
+const char *ct_inputs(struct ct_state *c, uint32_t now)
 {
     if (c->fault) return "motor_fault";
     for (unsigned a = 0; a < CT_AXES; a++) {
@@ -138,7 +137,7 @@ static bool blocked(const struct ct_state *c, unsigned a, int joint_dir)
     const struct zj_state *s = &c->sw[a];
     return positive ? s->top || s->raw_pos : s->bottom || s->raw_neg;
 }
-static void beta_update(struct ct_state *c)
+void ct_beta_update(struct ct_state *c)
 {
     if(c->coupling_ready) return; /* pulse ratio is already measured, not nominal */
     uint32_t f1 = c->factor[1] ? c->factor[1] : c->nominal[1];
@@ -147,7 +146,7 @@ static void beta_update(struct ct_state *c)
     c->beta = rounded((int64_t)c->coupling_ppm * f2 * CT_Q, (int64_t)1000000 * f1);
 }
 /* Model limits in motor coordinates. Physical switches still guard every edge. */
-static bool pose_valid(const struct ct_state *c, const int32_t p[CT_AXES], int margin_md)
+bool ct_pose_valid(const struct ct_state *c, const int32_t p[CT_AXES], int margin_md)
 {
     int64_t z = (int64_t)p[0] - c->origin[0];
     if (z < 0 || z > c->range[0]) return false;
@@ -160,7 +159,7 @@ static bool pose_valid(const struct ct_state *c, const int32_t p[CT_AXES], int m
 bool ct_safe(struct ct_state *c, uint32_t now)
 {
     if (!c->running) return false;
-    const char *why = inputs(c, now);
+    const char *why = ct_inputs(c, now);
     if (!why && now - c->lease_ms >= CT_LEASE) why = "heartbeat_lost";
     if (!why && now - c->start_ms >= (c->initializing ? CT_INIT_MS : 600000U)) why = "time_budget";
     for (unsigned a = 0; a < CT_AXES && !why; a++)
@@ -179,13 +178,13 @@ bool ct_safe(struct ct_state *c, uint32_t now)
         for (unsigned a = 0; a < CT_AXES; a++) if (blocked(c, a, c->joint_dir[a])) {
             ct_abort(c, a == CT_Z ? "z_limit" : a == CT_J1 ? "j1_limit" : "j2_limit"); return false;
         }
-        if (c->mode == CT_MOVE && (!c->referenced || !pose_valid(c, c->pos, 0))) {
+        if (c->mode == CT_MOVE && (!c->referenced || !ct_pose_valid(c, c->pos, 0))) {
             ct_abort(c, "soft_limit"); return false;
         }
     }
     return true;
 }
-static enum ct_result raw_move(struct ct_state *c, const int32_t target[CT_AXES], uint32_t rate, bool park)
+enum ct_result ct_raw_move(struct ct_state *c, const int32_t target[CT_AXES], uint32_t rate, bool park)
 {
     c->tick = c->ticks = 0; c->rate = rate;
     c->ramp_tick=0;
@@ -206,7 +205,7 @@ static enum ct_result raw_move(struct ct_state *c, const int32_t target[CT_AXES]
 }
 /* Max derivative of quintic smootherstep is 15/8. v^2(s) ramps
  * therefore need ceil(15 * (peak^2-end^2) / (16 * acceleration)) ticks. */
-static uint32_t path_ramp(uint32_t peak, uint32_t end, uint32_t accel)
+uint32_t ct_path_ramp(uint32_t peak, uint32_t end, uint32_t accel)
 { return (uint32_t)((15ULL*(peak*peak-end*end)+16U*accel-1U)/(16U*accel)); }
 bool ct_path_advance(struct ct_state *c)
 {
@@ -222,10 +221,10 @@ bool ct_path_advance(struct ct_state *c)
         ct_abort(c,"path_starved"); return false;
     }
     const struct ct_segment *s=&c->path_queue[c->path_head];
-    enum ct_result r=raw_move(c,s->target,s->peak,false);
+    enum ct_result r=ct_raw_move(c,s->target,s->peak,false);
     c->path_accel=s->accel; c->path_entry=s->entry; c->path_exit=s->exit;
-    c->path_up=path_ramp(s->peak,s->entry,s->accel);
-    c->path_down=path_ramp(s->peak,s->exit,s->accel);
+    c->path_up=ct_path_ramp(s->peak,s->entry,s->accel);
+    c->path_down=ct_path_ramp(s->peak,s->exit,s->accel);
     c->path_head=(c->path_head+1U)%CT_PATH_CAP; c->path_size--;
     c->path_started=true;
     if (r!=CT_START) { ct_abort(c,"path_invalid"); return false; }
@@ -270,7 +269,7 @@ static bool park_ready(struct ct_state *c, const int32_t target[CT_AXES], uint32
         if ((target[a]!=c->pos[a] || (a==CT_J2 && target[CT_J1]!=c->pos[CT_J1])) && !gate_ready(c,a,false,now)) return false;
     c->gate_wait=false; return true;
 }
-static enum ct_result begin_cal(struct ct_state *c, unsigned a, enum ct_stage stage, uint32_t now)
+enum ct_result ct_begin_cal(struct ct_state *c, unsigned a, enum ct_stage stage, uint32_t now)
 {
     if (!gate_ready(c,a,false,now) || (a==CT_J1 && !gate_ready(c,CT_J2,true,now)))
         return c->initializing ? CT_OK : CT_REJECTED;
@@ -333,13 +332,13 @@ static enum ct_result stationary_check(struct ct_state *c, uint32_t now)
 enum ct_result ct_service(struct ct_state *c, uint32_t now)
 {
     if (c->path_active && !c->path_started) {
-        const char *why=inputs(c,now);
+        const char *why=ct_inputs(c,now);
         if (!why && now-c->lease_ms>=CT_LEASE) why="heartbeat_lost";
         if (why) { ct_abort(c,why); return CT_REJECTED; }
         return CT_OK;
     }
     if (!c->initializing) return CT_OK;
-    const char *why = inputs(c, now);
+    const char *why = ct_inputs(c, now);
     if (!why && now - c->lease_ms >= CT_LEASE) why = "heartbeat_lost";
     if (!why && now - c->start_ms >= CT_INIT_MS) why = "time_budget";
     if (why) return init_fail(c, why);
@@ -384,27 +383,27 @@ enum ct_result ct_service(struct ct_state *c, uint32_t now)
             int64_t b_md = c->low_md[1] + rounded((int64_t)c->park_md[0] * c->coupling_ppm, 1000000);
             c->origin[2] = c->pos[2] - (int32_t)rounded(b_md * c->factor[2], 1024000);
         }
-        beta_update(c);
+        ct_beta_update(c);
         if (llabs(c->beta) > 64 * CT_Q) return init_fail(c, "coupling_bounds");
     } else if (c->running) return CT_OK;
     int32_t target[CT_AXES]; memcpy(target, c->pos, sizeof(target));
     enum ct_result result = CT_OK;
     switch (c->stage) {
-    case HS_Z: return begin_cal(c, CT_J2, HS_J2_PRE, now);
+    case HS_Z: return ct_begin_cal(c, CT_J2, HS_J2_PRE, now);
     case HS_J2_PRE:
         c->probe_range=c->range[2];
         c->probe_b0=c->pos[2]; c->probe_mid=c->pos[2]+(int32_t)c->range[2]/2;
         target[2] += (int32_t)c->range[2] / 2;
         if (!park_ready(c,target,now)) return c->initializing ? CT_OK : CT_REJECTED;
         c->stage = HS_J2_MID;
-        result = raw_move(c, target, 200, true); break;
+        result = ct_raw_move(c, target, 200, true); break;
     case HS_J2_MID:
-        if(!c->auto_coupling) return begin_cal(c,CT_J1,HS_J1,now);
+        if(!c->auto_coupling) return ct_begin_cal(c,CT_J1,HS_J1,now);
         if(!gate_ready(c,CT_J1,false,now) || !gate_ready(c,CT_J2,true,now)) return CT_OK;
         c->probe_a0=c->pos[1]; c->probe_da=c->probe_db=0;
         c->probe_contact=c->probe_retry=false;
         target[1]+=blocked(c,CT_J1,1) ? -(int32_t)c->probe_pulses : (int32_t)c->probe_pulses;
-        c->stage=HS_COUPLE_PROBE; result=raw_move(c,target,50,true); break;
+        c->stage=HS_COUPLE_PROBE; result=ct_raw_move(c,target,50,true); break;
     case HS_COUPLE_PROBE:
         if(c->probe_contact) {
             if(c->probe_retry) return init_fail(c,"coupling_probe_limit");
@@ -412,11 +411,11 @@ enum ct_result ct_service(struct ct_state *c, uint32_t now)
             int d=c->direction[1];
             target[1]=c->probe_a0-d*(int32_t)c->probe_pulses;
             if(!park_ready(c,target,now)) { c->probe_contact=true; c->probe_retry=false; return CT_OK; }
-            result=raw_move(c,target,50,true); break;
+            result=ct_raw_move(c,target,50,true); break;
         }
         c->probe_da=c->pos[1]-c->probe_a0;
         if(abs(c->probe_da)<16) return init_fail(c,"coupling_probe_short");
-        return begin_cal(c,CT_J2,HS_COUPLE_SCAN,now);
+        return ct_begin_cal(c,CT_J2,HS_COUPLE_SCAN,now);
     case HS_COUPLE_SCAN: {
         uint32_t old_range=c->probe_range, new_range=c->range[2];
         if(abs((int)old_range-(int)new_range)>(int)(c->range[2]/100+4)) return init_fail(c,"coupling_repeat");
@@ -432,16 +431,16 @@ enum ct_result ct_service(struct ct_state *c, uint32_t now)
         c->coupling_ready=true;
         target[1]=c->probe_a0; target[2]=c->probe_mid;
         if(!park_ready(c,target,now)) return CT_OK;
-        c->stage=HS_COUPLE_RETURN; result=raw_move(c,target,200,true); break;
+        c->stage=HS_COUPLE_RETURN; result=ct_raw_move(c,target,200,true); break;
     }
-    case HS_COUPLE_RETURN: return begin_cal(c,CT_J1,HS_J1,now);
+    case HS_COUPLE_RETURN: return ct_begin_cal(c,CT_J1,HS_J1,now);
     case HS_J1:
         target[1] = c->origin[1] + (int32_t)rounded((int64_t)c->park_md[0] * c->factor[1], 1024000);
         target[2] += (int32_t)rounded(((int64_t)target[1] - c->pos[1]) * c->beta, CT_Q);
         if (!park_ready(c,target,now)) return c->initializing ? CT_OK : CT_REJECTED;
         c->stage = HS_J1_MID;
-        result = raw_move(c, target, 400, true); break;
-    case HS_J1_MID: return begin_cal(c, CT_J2, HS_J2_FINAL, now);
+        result = ct_raw_move(c, target, 400, true); break;
+    case HS_J1_MID: return ct_begin_cal(c, CT_J2, HS_J2_FINAL, now);
     case HS_J2_FINAL: {
         int64_t b_md = c->park_md[1] + rounded((int64_t)c->park_md[0] * c->coupling_ppm, 1000000);
         target[2] = c->origin[2] + (int32_t)rounded(b_md * c->factor[2], 1024000);
@@ -450,10 +449,10 @@ enum ct_result ct_service(struct ct_state *c, uint32_t now)
         target[0] = c->origin[0] + (int32_t)c->range[0] - (int32_t)clearance;
         if (!park_ready(c,target,now)) return c->initializing ? CT_OK : CT_REJECTED;
         c->stage = HS_PARK;
-        result = raw_move(c, target, 800, true); break;
+        result = ct_raw_move(c, target, 800, true); break;
     }
     case HS_PARK:
-        if (!pose_valid(c, c->pos, 1000)) return init_fail(c, "park_bounds");
+        if (!ct_pose_valid(c, c->pos, 1000)) return init_fail(c, "park_bounds");
         c->initializing = false; c->referenced = true; c->reference_epoch++;
         c->stage = HS_READY; c->mode = CT_IDLE; c->reason = "initialized"; return CT_OK;
     default: return init_fail(c, "stage_error");
@@ -473,7 +472,7 @@ unsigned ct_next_mask(struct ct_state *c)
             c->accum[a] -= scale; mask |= 1U << a; next[a] += c->direction[a];
         }
     }
-    if (c->mode == CT_MOVE && !pose_valid(c, next, 0)) { ct_abort(c, "soft_limit"); return 0; }
+    if (c->mode == CT_MOVE && !ct_pose_valid(c, next, 0)) { ct_abort(c, "soft_limit"); return 0; }
     if (c->mode != CT_CAL) {
         /* DDA rounding can move the elbow by one microstep even with a zero
          * net elbow delta. Guard this individual edge, not just the segment. */
@@ -553,207 +552,3 @@ uint32_t ct_period_us(const struct ct_state *c, uint32_t now)
     if (rate > ceiling) rate = ceiling;
     return c->mode==CT_CAL && c->selected==CT_Z ? (1000000U+rate-1U)/rate : 1000000U/rate;
 }
-static enum ct_result reject(struct ct_state *c, const char *why)
-{
-    c->reply = why; if (ct_busy(c)) ct_abort(c, why);
-    return CT_REJECTED;
-}
-static bool number(const char *s, int64_t low, int64_t high, int64_t *v)
-{
-    if (!*s || (*s != '-' && (*s < '0' || *s > '9'))) return false;
-    for (const char *p = s + (*s == '-'); *p; p++) if (*p < '0' || *p > '9') return false;
-    char *end; errno = 0; long long x = strtoll(s, &end, 10);
-    if (errno || *end || x < low || x > high) return false;
-    *v = x; return true;
-}
-void ct_hold_complete(struct ct_state *c, bool success)
-{
-    if (success) c->holding[c->hold_axis] = c->hold_value;
-    else { c->fault = true; ct_abort(c, "motor_fault"); }
-}
-enum ct_result ct_command(struct ct_state *c, const char *line, uint32_t now)
-{
-    char buffer[192], *w[14]; size_t length = strlen(line); unsigned n = 0;
-    if (!length || length >= sizeof(buffer)) return reject(c, "invalid_command");
-    memcpy(buffer, line, length + 1);
-    for (char *p = strtok(buffer, " "); p && n < 14; p = strtok(NULL, " ")) w[n++] = p;
-    if (!n || n == 14) return reject(c, "invalid_command");
-    c->reply = "ok";
-    if (!strcmp(w[0], "STOP")) {
-        const char *why="stopped";
-        if (n==2) {
-            const char *tokens[]={"USER","ESC","FOCUS","MINIMIZE","DISCONNECT","CLOSE","STALE","ACK","MODEL"};
-            const char *reasons[]={"stop_user","stop_escape","stop_focus","stop_minimize","stop_disconnect","stop_close","stop_stale","stop_ack_timeout","stop_model"};
-            bool found=false;
-            for(unsigned i=0;i<sizeof(tokens)/sizeof(tokens[0]);i++)
-                if (!strcmp(w[1],tokens[i])) { why=reasons[i]; found=true; break; }
-            if (!found) return reject(c,"invalid_command");
-        } else if (n!=1) return reject(c,"invalid_command");
-        if (ct_busy(c)) ct_abort(c, why);
-        else if (n==2 || strncmp(c->reason,"stop_",5)) c->reason=why;
-        return CT_OK;
-    }
-    if (n == 1 && !strcmp(w[0], "STATUS")) return CT_OK;
-    int64_t v[14] = {0};
-    if (n < 2 || !number(w[1], 1, UINT32_MAX, &v[1])) return reject(c, "session");
-    if (!strcmp(w[0], "HELLO") && n == 2) {
-        if (ct_busy(c)) ct_abort(c, "session_changed");
-        c->session = (uint32_t)v[1]; c->last_job = c->job = 0; return CT_OK;
-    }
-    if (!c->session || v[1] != c->session) return reject(c, "session");
-    if (!strcmp(w[0], "KEEP") && n == 3) {
-        if (!number(w[2], 1, UINT32_MAX, &v[2]) || v[2] != c->job) return reject(c, "job");
-        c->lease_ms = now;
-        if (c->initializing && c->mode == CT_CAL)
-            c->cm.lease_ms = c->cal[c->selected].lease_ms = now;
-        return CT_OK;
-    }
-    if (!strcmp(w[0],"PATH") && n==4) {
-        if (!number(w[2],1,UINT32_MAX,&v[2]) || v[2]<=c->last_job) return reject(c,"job");
-        if (ct_busy(c)) return reject(c,"busy");
-        if (!c->referenced) return reject(c,"unreferenced");
-        const char *why=inputs(c,now); if(why) return reject(c,why);
-        if (!number(w[3],1,500,&v[3])) return reject(c,"path_invalid");
-        c->job=c->last_job=(uint32_t)v[2]; c->lease_ms=c->start_ms=now;
-        c->path_total=(uint16_t)v[3]; c->path_received=c->path_done=c->path_head=c->path_size=0;
-        memcpy(c->path_tail,c->pos,sizeof(c->pos));
-        c->path_active=true; c->path_started=false; c->mode=CT_MOVE;
-        c->reason="path_loading"; return CT_OK;
-    }
-    if (!strcmp(w[0],"SEG") && n==11) {
-        if (!c->path_active || !number(w[2],1,UINT32_MAX,&v[2]) || v[2]!=c->job ||
-            !number(w[3],0,499,&v[3]) || v[3]!=c->path_received || c->path_received>=c->path_total ||
-            c->path_size>=CT_PATH_CAP) return reject(c,"path_sequence");
-        struct ct_segment s={0}; uint32_t ticks=0;
-        for(unsigned a=0;a<CT_AXES;a++) {
-            if(!number(w[a+4],-CT_MAX_POS,CT_MAX_POS,&v[a+4])) return reject(c,"target");
-            int64_t p=v[a+4]+c->origin[a],d=p-c->path_tail[a];
-            if(p<-CT_MAX_POS || p>CT_MAX_POS || llabs(d)>1000000) return reject(c,"target");
-            s.target[a]=(int32_t)p; if(llabs(d)>ticks) ticks=(uint32_t)llabs(d);
-        }
-        /* A stroke cannot change paper Z. Pen lifts use ordinary MOVE. */
-        if (!ticks || s.target[CT_Z]!=c->path_tail[CT_Z] || !pose_valid(c,s.target,1000)) return reject(c,"path_invalid");
-        if (!number(w[7],50,CT_MAX_RATE,&v[7]) || !number(w[8],50,v[7],&v[8]) ||
-            !number(w[9],50,v[7],&v[9]) || !number(w[10],50,200000,&v[10])) return reject(c,"path_profile");
-        if ((!c->path_received && v[8]!=50) || (c->path_received+1U==c->path_total && v[9]!=50)) return reject(c,"path_profile");
-        if (llabs(v[8]*v[8]-v[9]*v[9])>2*v[10]*ticks) return reject(c,"path_profile");
-        if(path_ramp((uint32_t)v[7],(uint32_t)v[8],(uint32_t)v[10])+
-            path_ramp((uint32_t)v[7],(uint32_t)v[9],(uint32_t)v[10])>ticks) return reject(c,"path_profile");
-        s.peak=(uint16_t)v[7]; s.entry=(uint16_t)v[8]; s.exit=(uint16_t)v[9]; s.accel=(uint32_t)v[10];
-        c->path_queue[(c->path_head+c->path_size)%CT_PATH_CAP]=s;
-        c->path_size++; c->path_received++; memcpy(c->path_tail,s.target,sizeof(s.target));
-        return CT_OK;
-    }
-    if (!strcmp(w[0],"GO") && n==3) {
-        if(!c->path_active || c->path_started || !number(w[2],1,UINT32_MAX,&v[2]) || v[2]!=c->job ||
-            c->path_size<(c->path_total<CT_PATH_CAP ? c->path_total : CT_PATH_CAP)) return reject(c,"path_not_buffered");
-        const char *why=inputs(c,now); if(why) return reject(c,why);
-        c->lease_ms=c->start_ms=now;
-        if(!ct_path_advance(c)) return reject(c,"path_invalid");
-        c->reason="path_running"; return CT_START;
-    }
-    if (!strcmp(w[0], "HOLD") && n == 4) {
-        unsigned a = !strcmp(w[2], "J1") ? 1 : !strcmp(w[2], "J2") ? 2 : 0;
-        if (!a || !number(w[3], 0, 1, &v[3]) || ct_busy(c) || c->fault) return reject(c, "hold_rejected");
-        c->hold_axis = a; c->hold_value = (bool)v[3]; c->referenced = false; return CT_HOLD_CHANGE;
-    }
-    if (!strcmp(w[0], "POL") && n == 4) {
-        unsigned a = !strcmp(w[2], "Z") ? 0 : !strcmp(w[2], "J1") ? 1 : !strcmp(w[2], "J2") ? 2 : 3;
-        if (a >= 3 || !number(w[3], 0, 1, &v[3]) || ct_busy(c)) return reject(c, "pol_rejected");
-        c->pol[a] = (bool)v[3]; c->referenced = false; return CT_OK;
-    }
-    if(!strcmp(w[0],"COUPLE") && n==4) {
-        if(ct_busy(c) || !number(w[2],0,1,&v[2]) || !number(w[3],16,256,&v[3])) return reject(c,"coupling_config");
-        c->auto_coupling=(bool)v[2]; c->probe_pulses=(uint32_t)v[3]; c->referenced=false; return CT_OK;
-    }
-    bool config = !strcmp(w[0], "GEOM") || !strcmp(w[0], "SPAN") || !strcmp(w[0], "PARK") || !strcmp(w[0], "TUNE");
-    if (config) {
-        if (ct_busy(c)) return reject(c, "busy");
-        if (!strcmp(w[0], "GEOM")) {
-            if (n != 9 || !number(w[2], -2000000, 2000000, &v[2]) ||
-                !number(w[3], 1024, 100000000, &v[3]) ||
-                !number(w[4], 1024, 1000000, &v[4]) || !number(w[5], 1024, 1000000, &v[5]))
-                return reject(c, "geometry");
-            for (unsigned a = 0; a < 3; a++) {
-                if (!number(w[a + 6], 1, 32, &v[a + 6]) || (v[a + 6] & (v[a + 6] - 1))) return reject(c, "microstep");
-            }
-            c->coupling_ppm = (int32_t)v[2];
-            for (unsigned a = 0; a < 3; a++) { c->nominal[a] = (uint32_t)v[a + 3]; c->micro[a] = (uint32_t)v[a + 6]; }
-            c->cfg_mask |= 1;
-        } else if (!strcmp(w[0], "SPAN")) {
-            if (n != 7) return reject(c, "span");
-            for (unsigned i = 2; i <= 5; i++) if (!number(w[i], -180000, 180000, &v[i])) return reject(c, "angle");
-            if (!number(w[6], 0, 2000000, &v[6])) return reject(c, "z_span");
-            for (unsigned j = 0; j < 2; j++) {
-                int64_t lo = v[2 + 2 * j], hi = v[3 + 2 * j];
-                if (hi - lo < 10000 || hi - lo > 360000) return reject(c, "span");
-                c->low_md[j] = (int32_t)lo; c->high_md[j] = (int32_t)hi;
-            }
-            c->z_span_um = (uint32_t)v[6]; c->cfg_mask |= 2;
-        } else if (!strcmp(w[0], "PARK")) {
-            if (n != 5 || !number(w[2], -180000, 180000, &v[2]) ||
-                !number(w[3], -180000, 180000, &v[3]) || !number(w[4], 100, 100000, &v[4])) return reject(c, "park");
-            for (unsigned j = 0; j < 2; j++) {
-                if (v[j + 2] <= c->low_md[j] + 2000 || v[j + 2] >= c->high_md[j] - 2000) return reject(c, "park");
-            }
-            if (llabs(v[3]) < 10000 || llabs(v[3]) > 170000) return reject(c, "park_singular");
-            c->park_md[0] = (int32_t)v[2]; c->park_md[1] = (int32_t)v[3]; c->z_clear_um = (uint32_t)v[4]; c->cfg_mask |= 4;
-        } else {
-            if ((n != 8 && n!=9 && n!=11) || !number(w[2], 100, 800, &v[2]) || !number(w[3], 100, CT_Z_CAL_RATE, &v[3]) ||
-                !number(w[4], 256, 1000000, &v[4]) || !number(w[5], 256, 1000000, &v[5]) ||
-                !number(w[6], 32, 8192, &v[6]) || !number(w[7], 32, 8192, &v[7]) ||
-                v[6] >= v[4] || v[7] >= v[5] ||
-                (n>=9 && !number(w[8],50,v[3],&v[8])) ||
-                (n==11 && (!number(w[9],100,1600,&v[9]) || !number(w[10],50,v[9],&v[10])))) return reject(c, "tuning");
-            c->arm_rate = (uint32_t)v[2]; c->z_rate = (uint32_t)v[3]; c->arm_scan = (uint32_t)v[4];
-            c->z_scan = (uint32_t)v[5]; c->arm_back = (uint32_t)v[6]; c->z_back = (uint32_t)v[7]; c->cfg_mask |= 8;
-            c->z_fine_rate=n>=9 ? (uint32_t)v[8] : (c->z_fine_rate>c->z_rate ? c->z_rate : c->z_fine_rate);
-            c->j2_rate=n==11 ? (uint32_t)v[9] : c->arm_rate;
-            c->j2_fine_rate=n==11 ? (uint32_t)v[10] : (200U>c->j2_rate ? c->j2_rate : 200U);
-        }
-        c->referenced = false; return CT_OK;
-    }
-    if (!strcmp(w[0], "INIT") && n == 3) {
-        if (!number(w[2], 1, UINT32_MAX, &v[2]) || v[2] <= c->last_job) return reject(c, "job");
-        if (ct_busy(c)) return reject(c, "busy");
-        const char *why = inputs(c, now); if (why) return reject(c, why);
-        if (c->cfg_mask != 15 || c->reference_epoch == UINT32_MAX) return reject(c, "configuration");
-        c->job = c->last_job = (uint32_t)v[2]; c->lease_ms = c->start_ms = now;
-        c->input_axis=-1; c->input_kind=0; c->wait_axes=c->wait_bits=0;
-        c->referenced = false; c->initializing = true;
-        c->coupling_ready=c->probe_contact=c->probe_retry=false;
-        c->probe_da=c->probe_db=0;
-        memset(c->factor, 0, sizeof(c->factor)); memset(c->range, 0, sizeof(c->range));
-        for (unsigned a = 0; a < 3; a++) {
-            c->cal[a].phase=c->cal[a].failed_phase=HMC_IDLE;
-            c->cal[a].error=HMC_NONE; c->cal[a].n1=c->cal[a].n2=0;
-            c->cal[a].reference=false;
-        }
-        beta_update(c);
-        if (llabs(c->beta) > 64 * CT_Q) return reject(c, "coupling_bounds");
-        return begin_cal(c, CT_Z, HS_Z, now);
-    }
-    if (!strcmp(w[0], "MOVE") && n == 7) {
-        if (!number(w[2], 1, UINT32_MAX, &v[2]) || v[2] <= c->last_job) return reject(c, "job");
-        if (ct_busy(c)) return reject(c, "busy");
-        if (!c->referenced) return reject(c, "unreferenced");
-        const char *why = inputs(c, now); if (why) return reject(c, why);
-        int32_t target[CT_AXES];
-        for (unsigned a = 0; a < 3; a++) {
-            if (!number(w[a + 3], -CT_MAX_POS, CT_MAX_POS, &v[a + 3])) return reject(c, "target");
-            int64_t p = v[a + 3] + c->origin[a];
-            if (p < -CT_MAX_POS || p > CT_MAX_POS) return reject(c, "target");
-            target[a] = (int32_t)p;
-        }
-        if (!number(w[6], 50, CT_MAX_RATE, &v[6]) || !pose_valid(c, target, 1000)) return reject(c, "soft_limit");
-        c->job = c->last_job = (uint32_t)v[2]; c->lease_ms = c->start_ms = now;
-        c->input_axis=-1; c->input_kind=0;
-        enum ct_result r = raw_move(c, target, (uint32_t)v[6], false);
-        if (r == CT_REJECTED) return reject(c, "move_budget");
-        c->reason = c->running ? "moving" : "complete";
-        return r;
-    }
-    return reject(c, "invalid_command");
-}
-
-

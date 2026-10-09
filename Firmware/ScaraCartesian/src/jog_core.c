@@ -1,5 +1,6 @@
 #include "jog_core.h"
 #include <limits.h>
+#include "command_text.h"
 #include <string.h>
 
 void zj_init(struct zj_state *s)
@@ -137,57 +138,30 @@ enum zj_command_result zj_begin(struct zj_state *s, int direction, uint32_t rate
     return ZJ_STARTED;
 }
 
-static bool number(const char *p, uint32_t *out)
-{
-    uint32_t value = 0;
-    if (!*p) return false;
-    while (*p) {
-        if (*p < '0' || *p > '9') return false;
-        uint32_t digit = (uint32_t)(*p++ - '0');
-        if (value > (UINT32_MAX - digit) / 10) return false;
-        value = value * 10 + digit;
-    }
-    *out = value;
-    return true;
-}
-
 enum zj_command_result zj_command(struct zj_state *s, const char *line, uint32_t now)
 {
     char buffer[128], *words[7];
-    unsigned count = 0;
-    size_t length = strlen(line);
-    if (length == 0 || length >= sizeof(buffer)) goto invalid;
-    memcpy(buffer, line, length + 1);
-    for (char *p = buffer; *p;) {
-        while (*p == ' ') p++;
-        if (!*p) break;
-        if (count == 7) goto invalid;
-        words[count++] = p;
-        while (*p && *p != ' ') {
-            if ((unsigned char)*p < 33 || (unsigned char)*p > 126) goto invalid;
-            p++;
-        }
-        if (*p) *p++ = 0;
-    }
+    unsigned count;
+    if (!command_split(line, buffer, sizeof(buffer), words, 7, &count, true)) goto invalid;
     if (count == 1 && !strcmp(words[0], "STOP")) {
         zj_stop(s, ZJ_STOP); return ZJ_OK;
     }
     if (count == 1 && !strcmp(words[0], "STATUS")) return ZJ_OK;
     uint32_t session, id, rate, target;
-    if (count == 2 && !strcmp(words[0], "HELLO") && number(words[1], &session) && session) {
+    if (count == 2 && !strcmp(words[0], "HELLO") && command_number_u32(words[1], &session) && session) {
         zj_stop(s, ZJ_STOP);
         s->session = session; s->last_id = s->job = 0;
         return ZJ_OK;
     }
-    if (count == 3 && !strcmp(words[0], "KEEP") && number(words[1], &session) &&
-        number(words[2], &id) && session == s->session && session && id == s->job &&
+    if (count == 3 && !strcmp(words[0], "KEEP") && command_number_u32(words[1], &session) &&
+        command_number_u32(words[2], &id) && session == s->session && session && id == s->job &&
         s->direction && now - s->lease_ms < ZJ_LEASE_MS) {
         s->lease_ms = now; return ZJ_OK;
     }
     /* Late KEEP cannot revive motion, even if main has not checked timeout. */
     if (count == 3 && !strcmp(words[0], "KEEP")) return ZJ_REJECTED;
-    if (count == 6 && !strcmp(words[0], "JOG") && number(words[1], &session) &&
-        number(words[2], &id) && number(words[4], &rate) && number(words[5], &target) &&
+    if (count == 6 && !strcmp(words[0], "JOG") && command_number_u32(words[1], &session) &&
+        command_number_u32(words[2], &id) && command_number_u32(words[4], &rate) && command_number_u32(words[5], &target) &&
         session && session == s->session && id > s->last_id && !s->direction &&
         (!strcmp(words[3], "U") || !strcmp(words[3], "D")) &&
         rate >= ZJ_MIN_RATE && rate <= ZJ_MAX_RATE && target <= 1000000) {

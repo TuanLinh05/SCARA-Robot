@@ -1,20 +1,17 @@
-param([string]$Python='D:/zephyrproject/.venv/Scripts/python.exe',[switch]$Gui)
-$ErrorActionPreference='Stop'
-$env:PYTHONPATH="$(Join-Path $PSScriptRoot 'src');$(Join-Path $PSScriptRoot '.packaging')"
-$env:PYTHONUTF8='1'
-$env:PYTHONDONTWRITEBYTECODE='1'
-$firmware=Join-Path (Split-Path -Parent $PSScriptRoot) 'Firmware/ScaraCartesian'
-if (-not (Test-Path -LiteralPath "$firmware/build_host/test_motor_io.exe")) {
-    & "$firmware/tools/verify.ps1" -Python $Python
-    if ($LASTEXITCODE) { throw 'Firmware host tests failed' }
-}
-foreach ($suite in @('test_cartesian_nc.py','test_cartesian_workspace.py','test_cartesian_drawing.py','test_cartesian_path.py','test_cartesian_shapes.py','test_cartesian_audit.py')) {
-    & $Python -m unittest discover -s "$PSScriptRoot/tests" -p $suite -v
-    if ($LASTEXITCODE) { throw "Test suite failed: $suite" }
-}
-if ($Gui) {
-    foreach ($script in @('gui_cartesian_nc_smoke.py','gui_cartesian_workspace_smoke.py','gui_cartesian_background_smoke.py','gui_cartesian_drawing_smoke.py','gui_cartesian_shapes_smoke.py')) {
-        & $Python "$PSScriptRoot/tests/$script"
-        if ($LASTEXITCODE) { throw "GUI test failed: $script" }
+param([string]$Python = '', [string]$Gcc = '', [switch]$Gui)
+$ErrorActionPreference = 'Stop'
+$workspace = Split-Path -Parent $PSScriptRoot
+. (Join-Path $workspace 'tools/ProjectTools.ps1')
+$pythonTool = Resolve-ProjectTool -Requested $Python -Command python -Candidates @('D:/zephyrproject/.venv/Scripts/python.exe')
+$firmware = Join-Path $workspace 'Firmware/ScaraCartesian'
+
+# Rebuild the fixture before testing so telemetry/GUI tests use current C sources.
+& (Join-Path $firmware 'tools/verify.ps1') -Python $pythonTool -Gcc $Gcc -CoreOnly
+Invoke-WithProjectPython -Workspace $workspace -Action {
+    Invoke-ProjectCommand -Executable $pythonTool -Arguments @('-m', 'unittest', 'discover', '-s', "$PSScriptRoot/tests", '-p', 'test_*.py', '-v') -Description 'GUI unit tests'
+    if ($Gui) {
+        foreach ($script in (Get-ChildItem -LiteralPath "$PSScriptRoot/tests" -Filter 'gui_*_smoke.py' | Sort-Object Name)) {
+            Invoke-ProjectCommand -Executable $pythonTool -Arguments @($script.FullName) -Description "GUI smoke test $($script.Name)"
+        }
     }
 }

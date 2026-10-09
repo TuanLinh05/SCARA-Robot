@@ -1,0 +1,127 @@
+"""Vietnamese operator messages shared by motion, safety and status views."""
+
+STAGES = (
+    "Chưa lấy mốc",
+    "Z: đo hai biên",
+    "J2: đo sơ bộ",
+    "J2: về giữa",
+    "J1: đo và bù J2",
+    "J1: về mốc góc",
+    "J2: lấy lại mốc",
+    "Về tư thế đỗ",
+    "Sẵn sàng XYZ",
+    "Khởi tạo thất bại",
+    "Đo bù: dịch J1 một đoạn nhỏ",
+    "Đo bù: đo lại biên J2",
+    "Đo bù: trở về tư thế ban đầu",
+)
+PHASES = (
+    "Chờ",
+    "Tìm biên −",
+    "Lùi biên −",
+    "Tiếp cận chậm −",
+    "Quét đến biên +",
+    "Lùi biên +",
+    "Tiếp cận chậm +",
+    "Quét lại biên −",
+    "Lùi biên −",
+    "Tiếp cận chậm −",
+    "Hoàn tất",
+    "Lỗi",
+)
+Z_PHASES = (
+    "Chờ",
+    "Tìm biên trên",
+    "Lùi khỏi biên trên",
+    "Tiếp cận chậm biên trên",
+    "Quét xuống biên dưới",
+    "Lùi khỏi biên dưới",
+    "Tiếp cận chậm biên dưới",
+    "Quét lên biên trên",
+    "Lùi khỏi biên trên",
+    "Tiếp cận chậm biên trên",
+    "Hoàn tất",
+    "Lỗi",
+)
+ERRORS = (
+    "",
+    "Đã hủy",
+    "Mất heartbeat",
+    "GPIO/timer lỗi",
+    "Đầu vào công tắc lỗi",
+    "Vượt ngân sách tìm biên",
+    "Chạm chưa được xác nhận ổn định",
+    "Hai lần đo không lặp lại",
+    "Lệnh calib không hợp lệ",
+)
+REASONS = {
+    "unreferenced": "Cần HOME + CALIB",
+    "initialized": "Đã lấy mốc, sẵn sàng XYZ",
+    "initializing": "Đang khởi tạo",
+    "moving": "Đang di chuyển",
+    "complete": "Đã đến đích",
+    "stopped": "Đã dừng; home lại nếu đang chạy",
+    "heartbeat_lost": "Mất heartbeat; đã dừng",
+    "both_limits": "Hai biên cùng mở: kiểm tra NC/GND rồi reset nếu lỗi bị giữ",
+    "both_open": "Đã đọc HIGH/HIGH; chuyển động đã bị hủy",
+    "both_latched": "HIGH/HIGH đủ 20 ms: kiểm tra NC/GND, rồi reset STM32",
+    "checking_inputs": "Đã dừng xung, đang xác nhận tín hiệu công tắc",
+    "switch_unstable": "Tín hiệu không ổn định trở lại trong 200 ms; đã hủy",
+    "calibration_failed": "Calib thất bại",
+    "j2_guard": "J2 chạm biên khi J1 calib; kiểm tra hệ số bù/chiều",
+    "j2_limit": "Đã chạm biên J2",
+    "j1_limit": "Đã chạm biên J1",
+    "z_limit": "Đã chạm biên Z",
+    "switch_stale": "Dữ liệu công tắc quá hạn trong firmware",
+    "switch_io": "Lỗi đọc GPIO công tắc",
+    "switch_not_ready": "Đợi công tắc ổn định",
+    "motor_gpio_error": "Đầu ra motor lỗi; cần reset",
+    "waiting_switch": "Đợi tín hiệu ổn định trước khi chạy trục tiếp theo",
+    "switch_transition_unstable": "Tín hiệu không ổn định khi bắt đầu chạy trục",
+    "timer_error": "Timer lỗi; cần reset",
+    "released": "Arm đang nhả lực",
+    "coupling_sign": "Dấu bù đo được ngược cấu hình: kiểm tra chiều J2; xem log",
+    "coupling_measurement": "Phép đo bù quá nhỏ hoặc vượt giới hạn; xem log",
+    "coupling_geometry": "Hệ số góc suy ra ngoài phạm vi; kiểm tra góc tại công tắc",
+    "coupling_repeat": "Hành trình J2 thay đổi khi đo bù; kiểm tra cơ khí/công tắc",
+    "coupling_probe_limit": "Không đủ khoảng cho bước thử J1; xem log",
+    "coupling_probe_short": "Bước thử J1 quá ngắn để đo bù",
+    "soft_limit": "Vượt giới hạn góc/Z",
+    "usb_lost": "USB mất kết nối",
+    "z_clearance": "Khoảng lùi Z không phù hợp hành trình",
+}
+STOP_REASONS = {
+    "USER": "stop_user",
+    "ESC": "stop_escape",
+    "FOCUS": "stop_focus",
+    "MINIMIZE": "stop_minimize",
+    "DISCONNECT": "stop_disconnect",
+    "CLOSE": "stop_close",
+    "STALE": "stop_stale",
+    "ACK": "stop_ack_timeout",
+    "MODEL": "stop_model",
+}
+REASONS.update(
+    {
+        "stop_user": "Đã dừng bằng nút DỪNG",
+        "stop_escape": "Đã dừng bằng phím Esc",
+        "stop_focus": "Đã dừng vì GUI mất focus",
+        "stop_minimize": "Đã dừng vì GUI bị thu nhỏ",
+        "stop_disconnect": "Đã dừng khi ngắt COM",
+        "stop_close": "Đã dừng khi đóng GUI",
+        "stop_stale": "Đã dừng vì dữ liệu USB quá hạn",
+        "stop_ack_timeout": "Đã dừng vì lệnh không được xác nhận",
+        "stop_model": "Đã dừng vì mốc/mô hình không hợp lệ",
+    }
+)
+REASONS.update(
+    {
+        "path_loading": "Đang nạp bộ đệm nét",
+        "path_running": "Đang vẽ nét liên tục",
+        "path_starved": "Hết bộ đệm đường vẽ; đã dừng. Gửi log để kiểm tra USB/GUI.",
+        "path_sequence": "Sai thứ tự/bộ đệm đường vẽ",
+        "path_profile": "Thông số tăng tốc đường vẽ không hợp lệ",
+    }
+)
+
+GUI_VERSION = "SCARA_GUI_V5_R14"

@@ -5,9 +5,11 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/irq.h>
-#include <stdio.h>
 #include <string.h>
 #include "cart_core.h"
+#include "cart_telemetry.h"
+#include "command_stream.h"
+#include "command_text.h"
 #define USER_NODE DT_PATH(zephyr_user)
 #define PULSE_HIGH_US 50U
 struct motor_pins { struct gpio_dt_spec p, d, e; };
@@ -175,91 +177,16 @@ static void output_line(const char *s)
 { if (usb_configured) for (; *s; s++) uart_poll_out(usb, (unsigned char)*s); }
 static void status_report(void)
 {
-    /* Compact snapshot avoids copying the whole worker onto the main stack. */
-    char output[1536];
-    struct {
-        int32_t p[3], g[3]; uint32_t range[3], f[3], n1[3], n2[3];
-        uint64_t total[3];
-        unsigned phases[3], errors[3], failed[3], mask, ready, hold, pol, conflicts;
-        uint32_t session, job, epoch, tick, ticks, late;
-        unsigned path[4]; uint32_t starved;
-        uint32_t recovered, input_at, brief[3], false_hits[3], idle_ignored;
-        int input_axis;
-        unsigned input_kind, input_bits, raw, io_errors;
-        bool input_wait, gate_wait;
-        unsigned gate_axis;
-        int direction[3]; unsigned dir_levels, mode, selected, pps;
-        int32_t coupling_ppm, beta_q, probe_da, probe_db;
-        bool coupling_ready;
-        bool busy, referenced, fault; enum ct_stage stage;
-        const char *reason;
-    } s = {0};
+    char output[CT_STATUS_CAPACITY];
+    struct ct_status status;
     unsigned key = irq_lock();
-    s.session = control.session; s.job = control.job; s.epoch = control.reference_epoch;
-    s.tick = control.tick; s.ticks = control.ticks; s.late = timer_late;
-    s.path[0]=control.path_total; s.path[1]=control.path_received;
-    s.path[2]=control.path_done; s.path[3]=CT_PATH_CAP-control.path_size;
-    s.starved=control.path_starved;
-    s.busy = ct_busy(&control) || timer_running; s.referenced = control.referenced; s.fault = control.fault;
-    s.stage = control.stage; s.reason = control.reason;
-    s.recovered=control.recovered; s.input_wait=control.input_wait;
-    s.idle_ignored=control.idle_ignored; s.gate_wait=control.gate_wait; s.gate_axis=control.gate_axis;
-    s.input_axis=control.input_axis; s.input_kind=control.input_kind;
-    s.input_bits=control.input_bits; s.input_at=control.input_at_ms;
-    s.mode=control.mode; s.selected=control.selected;
-    s.pps=control.running ? 1000000U/ct_period_us(&control,k_uptime_get_32()) : 0;
-    s.coupling_ppm=control.coupling_ppm; s.beta_q=(int32_t)control.beta;
-    s.probe_da=control.probe_da; s.probe_db=control.probe_db; s.coupling_ready=control.coupling_ready;
-    for (unsigned a = 0; a < 3; a++) {
-        s.p[a] = control.pos[a] - control.origin[a]; s.g[a] = control.goal[a] - control.origin[a];
-        s.total[a] = control.total[a];
-        s.brief[a]=control.sw[a].brief_both;
-        s.false_hits[a]=control.cal[a].false_hits;
-        s.io_errors |= (control.sw[a].error ? 1U : 0U) << a;
-        s.raw |= ((control.sw[a].raw_pos ? 1U : 0U) | (control.sw[a].raw_neg ? 2U : 0U)) << (2*a);
-        s.range[a] = control.range[a]; s.f[a] = control.factor[a];
-        s.n1[a] = control.cal[a].n1; s.n2[a] = control.cal[a].n2;
-        s.phases[a] = control.cal[a].phase; s.errors[a] = control.cal[a].error; s.failed[a] = control.cal[a].failed_phase;
-        s.mask |= (control.sw[a].top || control.sw[a].raw_pos ? 1U : 0U) << (2 * a);
-        s.mask |= (control.sw[a].bottom || control.sw[a].raw_neg ? 1U : 0U) << (2 * a + 1);
-        s.ready |= (zj_ready(&control.sw[a]) ? 1U : 0U) << a;
-        s.hold |= (control.holding[a] ? 1U : 0U) << a;
-        s.pol |= (control.pol[a] ? 1U : 0U) << a;
-        s.direction[a]=control.direction[a];
-        s.dir_levels |= (gpio_pin_get_raw(motors[a].d.port,motors[a].d.pin)==1 ? 1U : 0U) << a;
-        s.conflicts |= (control.sw[a].conflict ? 1U : 0U) << a;
-    }
-    int fault = motor_error, error = timer_errno; irq_unlock(key);
-    int n = snprintf(output, sizeof(output),
-        "{\"type\":\"status\",\"protocol\":5,\"fw\":\"SCARA_CARTESIAN_NC_V5\",\"build\":\"SCARA_CART_NC_HOME_V5_R9\","
-        "\"session\":%lu,\"job\":%lu,\"up_ms\":%lu,\"busy\":%d,\"referenced\":%d,\"epoch\":%lu,\"stage\":%u,"
-        "\"pos\":[%ld,%ld,%ld],\"goal\":[%ld,%ld,%ld],\"total\":[%llu,%llu,%llu],\"range\":[%lu,%lu,%lu],\"factor\":[%lu,%lu,%lu],"
-        "\"n1\":[%lu,%lu,%lu],\"n2\":[%lu,%lu,%lu],\"phase\":[%u,%u,%u],\"cal_error\":[%u,%u,%u],\"failed_phase\":[%u,%u,%u],"
-        "\"switches\":%u,\"ready\":%u,\"holding\":%u,\"pol\":%u,\"conflicts\":%u,\"tick\":%lu,\"ticks\":%lu,"
-        "\"raw\":%u,\"errors\":%u,\"input_wait\":%d,\"recovered\":%lu,\"input_axis\":%d,\"input_kind\":%u,\"input_bits\":%u,\"input_at\":%lu,\"brief\":[%lu,%lu,%lu],"
-        "\"idle_ignored\":%lu,\"gate_wait\":%d,\"gate_axis\":%u,\"false_hits\":[%lu,%lu,%lu],"
-        "\"mode\":%u,\"selected\":%u,\"pps\":%u,\"direction\":[%d,%d,%d],\"dir_levels\":%u,"
-        "\"coupling_ppm\":%ld,\"beta_q\":%ld,\"probe_da\":%ld,\"probe_db\":%ld,\"coupling_ready\":%d,"
-        "\"path\":[%u,%u,%u,%u],\"starved\":%lu,"
-        "\"motor_error\":%d,\"fault\":%d,\"timer_late\":%lu,\"timer_errno\":%d,\"reason\":\"%s\"}\n",
-        (unsigned long)s.session, (unsigned long)s.job, (unsigned long)k_uptime_get_32(), s.busy, s.referenced,
-        (unsigned long)s.epoch, (unsigned)s.stage,
-        (long)s.p[0], (long)s.p[1], (long)s.p[2], (long)s.g[0], (long)s.g[1], (long)s.g[2],
-        (unsigned long long)s.total[0], (unsigned long long)s.total[1], (unsigned long long)s.total[2],
-        (unsigned long)s.range[0], (unsigned long)s.range[1], (unsigned long)s.range[2],
-        (unsigned long)s.f[0], (unsigned long)s.f[1], (unsigned long)s.f[2],
-        (unsigned long)s.n1[0], (unsigned long)s.n1[1], (unsigned long)s.n1[2],
-        (unsigned long)s.n2[0], (unsigned long)s.n2[1], (unsigned long)s.n2[2],
-        s.phases[0], s.phases[1], s.phases[2], s.errors[0], s.errors[1], s.errors[2], s.failed[0], s.failed[1], s.failed[2],
-        s.mask, s.ready, s.hold, s.pol, s.conflicts, (unsigned long)s.tick, (unsigned long)s.ticks,
-        s.raw, s.io_errors, s.input_wait, (unsigned long)s.recovered, s.input_axis, s.input_kind, s.input_bits, (unsigned long)s.input_at,
-        (unsigned long)s.brief[0], (unsigned long)s.brief[1], (unsigned long)s.brief[2],
-        (unsigned long)s.idle_ignored,s.gate_wait,s.gate_axis,
-        (unsigned long)s.false_hits[0],(unsigned long)s.false_hits[1],(unsigned long)s.false_hits[2],
-        s.mode,s.selected,s.pps,s.direction[0],s.direction[1],s.direction[2],s.dir_levels,
-        (long)s.coupling_ppm,(long)s.beta_q,(long)s.probe_da,(long)s.probe_db,s.coupling_ready,
-        s.path[0],s.path[1],s.path[2],s.path[3],(unsigned long)s.starved,
-        fault, s.fault, (unsigned long)s.late, error, s.reason);
+    ct_status_capture(&status, &control, timer_running, timer_late, k_uptime_get_32());
+    for (unsigned a = 0; a < CT_AXES; a++)
+        status.dir_levels |= (gpio_pin_get_raw(motors[a].d.port, motors[a].d.pin) == 1 ? 1U : 0U) << a;
+    status.motor_error = motor_error;
+    status.timer_error = timer_errno;
+    irq_unlock(key);
+    int n = ct_status_format(output, sizeof(output), &status, k_uptime_get_32());
     if (n > 0 && (size_t)n < sizeof(output)) output_line(output);
 }
 static void command(const char *line)
@@ -282,11 +209,10 @@ static void command(const char *line)
         start_motor();
         if (control.fault) { result = CT_REJECTED; control.reply = control.reason; }
     } else if (!control.running && timer_running) stop_pulses();
-    char op[16] = "INVALID", output[192]; sscanf(line, "%15s", op);
-    for (const char *p = op; *p; p++) if (*p < 'A' || *p > 'Z') { strcpy(op, "INVALID"); break; }
-    snprintf(output, sizeof(output),
-        "{\"type\":\"ack\",\"protocol\":5,\"session\":%lu,\"job\":%lu,\"op\":\"%s\",\"ok\":%d,\"reason\":\"%s\"}\n",
-        (unsigned long)control.session, (unsigned long)control.job, op, result != CT_REJECTED, control.reply);
+    char op[16], output[CT_ACK_CAPACITY];
+    command_operation(line, op);
+    ct_ack_format(output, sizeof(output), control.session, control.job,
+        op, result != CT_REJECTED, control.reply);
     irq_unlock(key);
     if (strcmp(op, "KEEP")) output_line(output);
 }
@@ -307,25 +233,20 @@ int main(void)
     if (timer_hz != 1000000U) { motor_error = 5; timer_fault(); }
     k_thread_start(sensor_tid);
     if (usb_enable(usb_status)) return 0;
-    char line[192]; size_t used = 0; bool discard = false;
+    struct command_stream receiver = {0};
     uint32_t rx_epoch = 0, report_ms = 0;
     while (1) {
         unsigned char ch; unsigned key = irq_lock();
         uint32_t epoch = usb_epoch; bool connected = usb_configured; irq_unlock(key);
         if (rx_epoch != epoch || !connected) {
-            used = 0; discard = false; rx_epoch = epoch;
+            command_stream_reset(&receiver); rx_epoch = epoch;
             while (uart_poll_in(usb, &ch) == 0) {}
         }
         for (unsigned n = 0; n < 256 && uart_poll_in(usb, &ch) == 0; n++) {
-            if (ch == '\r') continue;
-            if (ch == '\n') {
-                if (!discard && used) { line[used] = 0; command(line); }
-                used = 0; discard = false;
-            } else if (!discard) {
-                if (used >= sizeof(line) - 1 || ch < 32 || ch > 126) {
-                    key = irq_lock(); halt("invalid_command"); irq_unlock(key);
-                    used = 0; discard = true;
-                } else line[used++] = (char)ch;
+            enum command_stream_result received = command_stream_feed(&receiver, ch);
+            if (received == COMMAND_COMPLETE) command(receiver.line);
+            else if (received == COMMAND_INVALID) {
+                key = irq_lock(); halt("invalid_command"); irq_unlock(key);
             }
         }
         key = irq_lock();

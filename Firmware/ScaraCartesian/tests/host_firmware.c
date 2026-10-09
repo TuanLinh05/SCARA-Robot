@@ -3,6 +3,7 @@
 #include <setjmp.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
 #define main firmware_main
 #include "../src/main.c"
 #undef main
@@ -34,6 +35,8 @@ static struct counter_top_cfg last_cfg;
 static jmp_buf boot_exit;
 static char report[8192];
 static size_t report_used;
+static const unsigned char *received_bytes;
+static size_t received_size, received_index;
 uint32_t k_uptime_get_32(void) { return (uint32_t)(clock_us / 1000); }
 uint32_t k_cycle_get_32(void) { return (uint32_t)(clock_us * 72U); }
 void k_busy_wait(uint32_t us) { clock_us += us; }
@@ -89,7 +92,12 @@ int counter_set_top_value(const struct device *d, const struct counter_top_cfg *
     return counter_error;
 }
 int usb_enable(void (*cb)(enum usb_dc_status_code, const uint8_t *)) { cb(USB_DC_CONFIGURED, NULL); return 0; }
-int uart_poll_in(const struct device *d, unsigned char *ch) { (void)d; (void)ch; return -1; }
+int uart_poll_in(const struct device *d, unsigned char *ch)
+{
+    (void)d;
+    if (received_index == received_size) return -1;
+    *ch = received_bytes[received_index++]; return 0;
+}
 void uart_poll_out(const struct device *d, unsigned char ch)
 { (void)d; assert(report_used + 1 < sizeof(report)); report[report_used++] = (char)ch; report[report_used] = 0; }
 static void clear_report(void) { report_used = 0; report[0] = 0; }
@@ -121,9 +129,39 @@ static void setup(void)
     physical_pos[0]=16000; physical_pos[1]=267; physical_pos[2]=667;
     check_elbow_hold=false; compensated_edges=0;
     physical_f1=40.0/3.0;
+    received_bytes=NULL; received_size=received_index=0;
     for (int i = 0; i < 4; i++) mock_devices[i].id = i;
     booting = true; if (!setjmp(boot_exit)) firmware_main(); booting = false;
     sample(); clock_us += 21000; sample(); command("HELLO 7");
+}
+static void receive_at_boot(const unsigned char *bytes, size_t size)
+{
+    setup(); clear_report();
+    received_bytes=bytes; received_size=size; received_index=0;
+    booting=true; if (!setjmp(boot_exit)) firmware_main(); booting=false;
+    assert(received_index==received_size);
+    received_bytes=NULL; received_size=received_index=0;
+    for (unsigned a=0;a<CT_AXES;a++) assert(!rises[a]);
+}
+static void receiver_tests(void)
+{
+    const unsigned char valid[]="HE\rLLO 7\r\n";
+    receive_at_boot(valid,sizeof(valid)-1);
+    assert(control.session==7 && strstr(report,"\"op\":\"HELLO\",\"ok\":1"));
+    const unsigned char malformed[]="HELLO 7\0JUNK\nHELLO 8\n";
+    receive_at_boot(malformed,sizeof(malformed)-1);
+    assert(control.session==8 && !strcmp(control.reason,"invalid_command"));
+    assert(strstr(report,"\"session\":8") && !strstr(report,"\"session\":7"));
+    unsigned char boundary[COMMAND_LINE_CAPACITY+16];
+    memset(boundary,' ',sizeof(boundary)); memcpy(boundary,"HELLO 7",7);
+    boundary[COMMAND_LINE_CAPACITY-1]='\n';
+    receive_at_boot(boundary,COMMAND_LINE_CAPACITY);
+    assert(control.session==7);
+    boundary[COMMAND_LINE_CAPACITY-1]=' ';
+    memcpy(boundary+COMMAND_LINE_CAPACITY,"\nHELLO 8\n",9);
+    receive_at_boot(boundary,COMMAND_LINE_CAPACITY+9);
+    assert(control.session==8 && !strcmp(control.reason,"invalid_command"));
+    assert(strstr(report,"\"session\":8") && !strstr(report,"\"session\":7"));
 }
 static void referenced_fixture(void)
 {
@@ -255,6 +293,7 @@ static int stroke_file(const char *path)
 int main(int argc, char **argv)
 {
     if(argc==3 && !strcmp(argv[1],"--stroke-file")) return stroke_file(argv[2]);
+    receiver_tests();
     setup(); assert(!control.referenced && !control.running && !counter_on);
     for (unsigned a=0;a<3;a++) assert(!rises[a] && !levels[pad_index(motors[a].e.port,motors[a].e.pin)]);
     command("MOVE 7 1 25000 0 2000 800"); assert(!control.running && !counter_on);

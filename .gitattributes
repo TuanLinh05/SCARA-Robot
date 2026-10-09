@@ -1,0 +1,2 @@
+# Preserve verified firmware bytes, including Intel HEX line endings.
+Firmware/ScaraCartesian/Hex/refactor/*.hex -text whitespace=cr-at-eol

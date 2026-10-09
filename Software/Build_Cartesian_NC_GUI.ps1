@@ -1,19 +1,19 @@
-param([string]$Python='D:/zephyrproject/.venv/Scripts/python.exe')
-$ErrorActionPreference='Stop'
-$software=$PSScriptRoot
-$env:PYTHONPATH="$(Join-Path $software 'src');$(Join-Path $software '.packaging')"
-$env:PYTHONUTF8='1'
-$env:PYTHONDONTWRITEBYTECODE='1'
-$hasBuilder = & $Python -c 'import importlib.util; print(importlib.util.find_spec("PyInstaller") is not None)'
-if ($hasBuilder -ne 'True') {
-    & $Python -m pip install --target "$software/.packaging" -r "$software/requirements-build.txt"
-    if ($LASTEXITCODE) { throw 'Build dependencies could not be installed' }
+param([string]$Python = '')
+$ErrorActionPreference = 'Stop'
+$software = $PSScriptRoot
+. (Join-Path (Split-Path -Parent $software) 'tools/ProjectTools.ps1')
+$pythonTool = Resolve-ProjectTool -Requested $Python -Command python -Candidates @('D:/zephyrproject/.venv/Scripts/python.exe')
+Invoke-WithProjectPython -Workspace (Split-Path -Parent $software) -Action {
+    $hasBuilder = & $pythonTool -c 'import importlib.util; print(importlib.util.find_spec("PyInstaller") is not None)'
+    if ($LASTEXITCODE -ne 0) { throw 'Python dependency check failed' }
+    if ($hasBuilder -ne 'True') {
+        Invoke-ProjectCommand -Executable $pythonTool -Arguments @('-m', 'pip', 'install', '--target', "$software/.packaging", '-r', "$software/requirements-build.txt") -Description 'Build dependency installation'
+    }
+    Push-Location -LiteralPath $software
+    try {
+        Invoke-ProjectCommand -Executable $pythonTool -Arguments @('-m', 'PyInstaller', '--noconfirm', 'packaging/SCARA_Cartesian_NC_v5_R14.spec') -Description 'GUI packaging'
+    } finally { Pop-Location }
+    $output = Join-Path $software 'dist/SCARA_Cartesian_NC_v5_R14'
+    Copy-Item -LiteralPath "$software/README.md" -Destination "$output/README.md"
+    Get-FileHash -LiteralPath "$output/SCARA_Cartesian_NC_v5_R14.exe"
 }
-Push-Location -LiteralPath $software
-try {
-    & $Python -m PyInstaller --noconfirm packaging/SCARA_Cartesian_NC_v5_R14.spec
-    if ($LASTEXITCODE) { throw 'GUI packaging failed' }
-} finally { Pop-Location }
-$output=Join-Path $software 'dist/SCARA_Cartesian_NC_v5_R14'
-Copy-Item -LiteralPath "$software/README.md" -Destination "$output/README.md"
-Get-FileHash -LiteralPath "$output/SCARA_Cartesian_NC_v5_R14.exe"

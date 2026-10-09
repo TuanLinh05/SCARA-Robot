@@ -1,0 +1,12 @@
+"""Shared studio colors; dashboard accents retain their original appearance."""
+
+BG = "#0b1220"
+CARD = "#142136"
+TEXT = "#ecf3fc"
+MUTED = "#9fb1ca"
+BLUE = "#5aaeff"
+GREEN = "#60d5ae"
+RED = "#ff8795"
+LINE = "#263952"
+ACCENT = "#61d9c4"
+DASHBOARD_BLUE = "#69adff"

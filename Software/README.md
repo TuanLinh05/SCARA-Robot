@@ -51,10 +51,24 @@ Python3.12, `pip install -r requirements.txt`. Chạy nguồn:
 Build EXE: `./Build_Cartesian_NC_GUI.ps1`. Script cài bộ đóng gói theo
 `requirements-build.txt` vào `.packaging/` nếu chưa có. Đây là cache có thể xóa.
 
-Kiểm thử: `./Verify_Cartesian_NC_GUI.ps1 -Gui`. Nếu chưa có harness firmware,
-script tự build/kiểm thử nó trước. Có thể bỏ `-Gui` để chạy các unit.
+Kiểm thử: `./Verify_Cartesian_NC_GUI.ps1 -Gui`. Script luôn build/kiểm thử
+harness firmware trước để tránh dùng mẫu C cũ, rồi tự tìm mọi `test_*.py`.
+Từ thư mục gốc, có thể chạy `./Verify_SCARA.ps1 -Gui`. Bỏ `-Gui` để chỉ chạy
+các unit; `-Python` và `-Gcc` nhận đường dẫn công cụ nếu chưa có trên PATH.
 Build/checks tạo `build/`, `__pycache__/`, `Firmware/ScaraCartesian/build_host/`;
 đó là sản phẩm sinh lại, có thể xóa sau khi dùng. Các kiểm thử không chạy robot.
+
+GUI được chia theo trách nhiệm: `cartesian_nc_control.py` khởi tạo và điều phối
+vòng Tk; `cartesian_nc_connection.py` xử lý USB/session/ACK/status;
+`cartesian_nc_motion.py` quản lý lệnh, chuỗi điểm và upload nét;
+`cartesian_nc_planning.py` quản lý worker tính đường đi và loại kết quả khi mốc
+hoặc vị trí đã đổi; `cartesian_nc_safety.py` quản lý STOP/focus;
+`cartesian_nc_view.py` dựng dashboard/cài đặt. Timing và điều kiện cho phép chạy
+nằm trong `cartesian_nc_policy.py`, màu/thông báo trong các module riêng.
+`NCApp`, CLI, cấu hình JSON và giao thức firmware vẫn giữ giao diện hiện tại.
+
+Định dạng Python bằng Black 26.1.0 (`pip install -r requirements-dev.txt`, rồi
+`python -m black src tests packaging/SCARA_Cartesian_NC_v5_R14.spec`).
 
 Phân tích log chỉ đọc, không mở COM:
 `python src/cartesian_nc_audit.py path/to/session.jsonl --out reports/drawing_audit`.

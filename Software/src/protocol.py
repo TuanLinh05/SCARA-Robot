@@ -1,4 +1,5 @@
 """SCARA Z Jog v2: both physical limits are required in telemetry."""
+
 from dataclasses import dataclass, MISSING
 import json
 import math
@@ -18,9 +19,11 @@ def pulse_rate(speed_mm_s: float, lead_mm: float) -> int:
         raise ValueError("Hành trình: 0,5–20 mm/vòng; tốc độ: 0,05–10 mm/s.")
     rate = round(speed_mm_s * STEPS_PER_REV / lead_mm)
     if not MIN_RATE <= rate <= MAX_RATE:
-        raise ValueError(f"Tốc độ cần {rate:,} xung/s. Chọn tốc độ trong khoảng "
-                         f"{MIN_RATE * lead_mm / STEPS_PER_REV:.3f}–"
-                         f"{MAX_RATE * lead_mm / STEPS_PER_REV:.3f} mm/s.")
+        raise ValueError(
+            f"Tốc độ cần {rate:,} xung/s. Chọn tốc độ trong khoảng "
+            f"{MIN_RATE * lead_mm / STEPS_PER_REV:.3f}–"
+            f"{MAX_RATE * lead_mm / STEPS_PER_REV:.3f} mm/s."
+        )
     return rate
 
 
@@ -59,8 +62,12 @@ class Status:
     def parse(cls, line: bytes):
         try:
             value = json.loads(line)
-            if (value.get("type") != "status" or value.get("protocol") != 2 or
-                    value.get("fw") != "SCARA_Z_JOG_V2" or value.get("spr") != STEPS_PER_REV):
+            if (
+                value.get("type") != "status"
+                or value.get("protocol") != 2
+                or value.get("fw") != "SCARA_Z_JOG_V2"
+                or value.get("spr") != STEPS_PER_REV
+            ):
                 return None
             fields = cls.__dataclass_fields__
             required = [k for k, field in fields.items() if field.default is MISSING]
@@ -68,24 +75,49 @@ class Status:
                 return None
             if not isinstance(value.get("reason"), str) or len(value["reason"]) > 40:
                 return None
-            if (value["dir"] not in (-1, 0, 1) or
-                    any(value[k] not in (0, 1) for k in
-                        ("top", "bottom", "ready", "ready_top", "ready_bottom", "conflict")) or
-                    value["ready"] != int(value["ready_top"] and value["ready_bottom"]) or
-                    not 0 <= value["adc"] <= 4095 or not 0 <= value["adc_bottom"] <= 4095 or
-                    any(not 0 <= value[k] <= 0xFFFFFFFF for k in
-                        ("session", "job", "up_ms", "move", "target", "rate")) or
-                    not 0 <= value["total"] <= 0xFFFFFFFFFFFFFFFF or
-                    not -(1 << 63) <= value["pos"] < (1 << 63)):
+            if (
+                value["dir"] not in (-1, 0, 1)
+                or any(
+                    value[k] not in (0, 1)
+                    for k in (
+                        "top",
+                        "bottom",
+                        "ready",
+                        "ready_top",
+                        "ready_bottom",
+                        "conflict",
+                    )
+                )
+                or value["ready"] != int(value["ready_top"] and value["ready_bottom"])
+                or not 0 <= value["adc"] <= 4095
+                or not 0 <= value["adc_bottom"] <= 4095
+                or any(
+                    not 0 <= value[k] <= 0xFFFFFFFF
+                    for k in ("session", "job", "up_ms", "move", "target", "rate")
+                )
+                or not 0 <= value["total"] <= 0xFFFFFFFFFFFFFFFF
+                or not -(1 << 63) <= value["pos"] < (1 << 63)
+            ):
                 return None
-            if "build" in value and (not isinstance(value["build"], str) or
-                    len(value["build"]) > 64 or
-                    any(not (c.isascii() and (c.isalnum() or c in "_-")) for c in value["build"])):
+            if "build" in value and (
+                not isinstance(value["build"], str)
+                or len(value["build"]) > 64
+                or any(
+                    not (c.isascii() and (c.isalnum() or c in "_-"))
+                    for c in value["build"]
+                )
+            ):
                 return None
-            for name, low, high in (("pulse_us", 0, 10000), ("motor_error", -1, 4),
-                                    ("pul_pin", -4095, 1), ("dir_pin", -4095, 1),
-                                    ("ena_pin", -4095, 1)):
-                if name in value and (type(value[name]) is not int or not low <= value[name] <= high):
+            for name, low, high in (
+                ("pulse_us", 0, 10000),
+                ("motor_error", -1, 4),
+                ("pul_pin", -4095, 1),
+                ("dir_pin", -4095, 1),
+                ("ena_pin", -4095, 1),
+            ):
+                if name in value and (
+                    type(value[name]) is not int or not low <= value[name] <= high
+                ):
                     return None
             return cls(**{k: value[k] for k in fields if k in value})
         except (ValueError, TypeError, AttributeError, UnicodeError):
@@ -93,22 +125,33 @@ class Status:
 
 
 class LineDecoder:
-    def __init__(self):
+    def __init__(
+        self, parser=None, max_frame_bytes=1024, on_rejected=None, overflow_marker=None
+    ):
         self.buffer = bytearray()
         self.discard = False
+        self.parser = parser or Status.parse
+        self.max_frame_bytes = max_frame_bytes
+        self.on_rejected = on_rejected
+        self.overflow_marker = overflow_marker
 
     def feed(self, data):
         messages = []
         for byte in data:
             if byte == 10:
                 if not self.discard:
-                    status = Status.parse(bytes(self.buffer))
-                    if status:
-                        messages.append(status)
+                    raw = bytes(self.buffer)
+                    message = self.parser(raw)
+                    if message is not None:
+                        messages.append(message)
+                    elif self.on_rejected:
+                        self.on_rejected(raw)
+                elif self.on_rejected and self.overflow_marker is not None:
+                    self.on_rejected(self.overflow_marker)
                 self.buffer.clear()
                 self.discard = False
             elif not self.discard:
-                if len(self.buffer) >= 1024:
+                if len(self.buffer) >= self.max_frame_bytes:
                     self.buffer.clear()
                     self.discard = True
                 else:
@@ -120,13 +163,15 @@ class SerialLink:
     def __init__(self, port, serial_factory=None):
         if serial_factory is None:
             import serial
+
             serial_factory = serial.Serial
         self.events = queue.Queue(maxsize=128)
         self.lock = threading.Lock()
         self.closed = threading.Event()
         self.session = secrets.randbelow(0xFFFFFFFE) + 1
-        self.serial = serial_factory(port=port, baudrate=115200, timeout=0.02,
-                                     write_timeout=0.1)
+        self.serial = serial_factory(
+            port=port, baudrate=115200, timeout=0.02, write_timeout=0.1
+        )
         try:
             self.serial.dtr = True
             self.serial.reset_input_buffer()
@@ -136,7 +181,9 @@ class SerialLink:
         except Exception:
             self.serial.close()
             raise
-        self.thread = threading.Thread(target=self._read, daemon=True, name="USB serial")
+        self.thread = threading.Thread(
+            target=self._read, daemon=True, name="USB serial"
+        )
         self.thread.start()
 
     def _event(self, event):
@@ -149,13 +196,21 @@ class SerialLink:
                 pass
             self.events.put_nowait(event)
 
+    def _make_decoder(self):
+        return LineDecoder()
+
+    def _message_kind(self, message):
+        return "status"
+
     def _read(self):
-        decoder = LineDecoder()
+        decoder = self._make_decoder()
         try:
             while not self.closed.is_set():
                 data = self.serial.read(256)
-                for status in decoder.feed(data):
-                    self._event(("status", time.monotonic(), status))
+                for message in decoder.feed(data):
+                    self._event(
+                        (self._message_kind(message), time.monotonic(), message)
+                    )
         except Exception as error:
             if not self.closed.is_set():
                 self._event(("error", str(error)))

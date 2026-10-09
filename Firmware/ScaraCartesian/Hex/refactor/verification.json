@@ -1,0 +1,22 @@
+{
+  "build": "SCARA_CART_NC_HOME_V5_R9",
+  "flash_bytes": 54724,
+  "flash_limit": 65536,
+  "ram_link_bytes": 17792,
+  "ram_limit": 20480,
+  "ram_check_source": "linked ELF matching image bytes",
+  "base": "0x8000000",
+  "initial_sp": "0x20003980",
+  "reset_vector": "0x8005a29",
+  "hex_sha256": "edd86361305349be26595ec465bdd99240fb4cf4718c8d66e7dbfaa320bf7033",
+  "bin_sha256": "73652990b92a20953e3365fe7d1e17defa7c52e7821c0879c4dff4c3016cc602",
+  "validation": [
+    "HEX checksums, record grammar and flash bounds",
+    "HEX/BIN byte equality",
+    "Stack and Thumb reset vectors",
+    "Build tag",
+    "RAM size tied to matching firmware image"
+  ],
+  "real_hardware_tested": false,
+  "elf_sha256": "45026a7a1ec11cf41e6b8ee1ed2359d969f3c01cbe67a0c9f39bd38fd7bb335c"
+}

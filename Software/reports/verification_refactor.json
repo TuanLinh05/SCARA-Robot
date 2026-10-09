@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-09",
+  "scope": [
+    "Firmware/ScaraCartesian",
+    "Software"
+  ],
+  "real_hardware_tested": false,
+  "firmware": {
+    "target": "stm32_min_dev@blue",
+    "host_harnesses_passed": [
+      "test_cart_core",
+      "test_protocol",
+      "test_motor_io"
+    ],
+    "artifact_unit_tests_passed": 6,
+    "maximum_telemetry_bytes": 1197,
+    "telemetry_matches_previous_build": true,
+    "image_verification": {
+      "build": "SCARA_CART_NC_HOME_V5_R9",
+      "flash_bytes": 54724,
+      "flash_limit": 65536,
+      "ram_link_bytes": 17792,
+      "ram_limit": 20480,
+      "ram_check_source": "linked ELF matching image bytes",
+      "base": "0x8000000",
+      "initial_sp": "0x20003980",
+      "reset_vector": "0x8005a29",
+      "hex_sha256": "edd86361305349be26595ec465bdd99240fb4cf4718c8d66e7dbfaa320bf7033",
+      "bin_sha256": "73652990b92a20953e3365fe7d1e17defa7c52e7821c0879c4dff4c3016cc602",
+      "validation": [
+        "HEX checksums, record grammar and flash bounds",
+        "HEX/BIN byte equality",
+        "Stack and Thumb reset vectors",
+        "Build tag",
+        "RAM size tied to matching firmware image"
+      ],
+      "real_hardware_tested": false,
+      "elf_sha256": "45026a7a1ec11cf41e6b8ee1ed2359d969f3c01cbe67a0c9f39bd38fd7bb335c"
+    },
+    "release_hex_bin_preserved": true,
+    "source_sha256": {
+      "cart_commands.c": "59a680872e168f51b241784b4cfc9c752da236910248c9a6fdd1c4d8be59e170",
+      "cart_core.c": "df350f8203baee1c33794dbc8318ba6b236a222a45d4eac13ce0bddcf6944311",
+      "cart_core.h": "3a53d3ae04ee320c71047c0c91d773ad332ec6de11bdacafa7985555fb8ce853",
+      "cart_core_internal.h": "fa86e791d7df95c0699c80965ee72d0e95e7e8dcaff0e2ee9f278f797f863b22",
+      "cart_telemetry.c": "87ab39cb1e9af7a122adc3cbff09eed5be470a97a4e910138318bddff82ee691",
+      "cart_telemetry.h": "b7113370baae14ccef7110b8a6f318b19593d3ac210c970c82a518c7b6ef1b20",
+      "command_stream.c": "257c987736ea9a1e9a10b6eeab99ca2bc5c951c5064a1d9e597160cbb0a29e1e",
+      "command_stream.h": "68bcea8a555702f860fc5a28bdd61a96c4330921009579bcf79f433adcf847cc",
+      "command_text.c": "88b6aab5fd087bc5cea4e41944404f7e648a75c13cb5d4a372fc8a04f11844d7",
+      "command_text.h": "71de996bbd9955f1a6b8868f57ddfc4d428ba517af85b60b2da5d31643dec52e",
+      "home_worker.c": "012ee41ba3ff4a27a4c03ef45359f3c14a1d34b637cb9c96013816af69217478",
+      "home_worker.h": "6e6a034233caf923f658b13c948bcae042b738eb104b10ea4b69fc9709914773",
+      "jog_core.c": "3f748b9c5374541e7fe94401f27f897bfd080883e3accf44f7b3e892b42a48b9",
+      "jog_core.h": "2942705f413618dc79d1a369504e958353916082f76740155853abcc15e199b8",
+      "main.c": "efc06bccdae53e0a7a92d30517a7872f8499641d84d542c820259b1827cff6e6"
+    }
+  },
+  "software": {
+    "unit_tests_passed": 62,
+    "gui_smoke_tests_passed": [
+      "gui_cartesian_background_smoke.py",
+      "gui_cartesian_drawing_smoke.py",
+      "gui_cartesian_nc_smoke.py",
+      "gui_cartesian_shapes_smoke.py",
+      "gui_cartesian_workspace_smoke.py"
+    ],
+    "packaged_offline_smoke_passed": true,
+    "exe_sha256": "6f1367c0bdc204116db4c12d70798956c008a5d6a181efb883550f9983487136",
+    "source_sha256": {
+      "cartesian_model.py": "eb6a540c9ffb0d563d730c112593867f8b15a52d3c60edae488d74e211581f5d",
+      "cartesian_nc_audit.py": "6fc109b068a2ac44b1d04d184e8c4039fe8ecc526f17ac3cadda0f0db55535b1",
+      "cartesian_nc_connection.py": "adb076fb5521bdefb80c680b5c18b45293fc17e0df9d73ba82194e5e00d3b05e",
+      "cartesian_nc_control.py": "de8ea3ab2d0bac37d54d664a3ae02e5f82ce2b744731c4fd57a3944044d2711e",
+      "cartesian_nc_curves.py": "df82367c11277225e3a624651539036ad72bfa2e003360b16fafbfc9187dad8a",
+      "cartesian_nc_demo.py": "767c745103bc57fb81a42dfaf520e1ea862c1c52da254691fa19c5c5a9bfbeae",
+      "cartesian_nc_drawing.py": "8ed5e8829dc30c925823b8dc109bf8f386585d511b6b4aad7b1adefb4b60bac9",
+      "cartesian_nc_drawing_gui.py": "730f59eb87692deaa0d393a44b3227651589b7a25198a6e4733ebe53c5031158",
+      "cartesian_nc_editor.py": "96f61354b8e18a616a17c791c9fe7122d07b3c89ef37765eb768a2df2a5aa991",
+      "cartesian_nc_font.py": "5fa720712c366a3b09c1b9c6d54465330d409cfc25c0e2811496ee5a2785dea0",
+      "cartesian_nc_geometry.py": "743956375c363d3ebcdc748b11e72644678b234f330e55811fbdfae624210223",
+      "cartesian_nc_layout.py": "0e7f6b6f1dc21155e4cdf9a4ecf7ca05d2e7ab4196c9d3c390ee6fd97b9b4506",
+      "cartesian_nc_log.py": "c4426149c51cd90bc7f70b92b977db2c2975ae563fdf439e765331ce9b97e791",
+      "cartesian_nc_messages.py": "875e515105f12860da679b9a84f116d1f0db8dc05adf557bf1ced737c87ca94f",
+      "cartesian_nc_model.py": "81300175b708db2a876c9416d7391dda0fdfe45633f75044386c6040f6e706ae",
+      "cartesian_nc_motion.py": "5dd584eb149436bb3c3bdfcacd09392273245410c20079a30d8255836b4946bd",
+      "cartesian_nc_path.py": "d4c3da6c7a7b1a8740287ba85be1523060978f3fbe41d0174cd2a711f8f8e25e",
+      "cartesian_nc_planning.py": "05b2759b1c5d959e09c614de1ce07391bb8f35ae83db79175ff4ab3bd999d064",
+      "cartesian_nc_policy.py": "910a35f9bd60bd5fe55cd95bdbdcf2accd640fb62207670f807bfb4c48286921",
+      "cartesian_nc_protocol.py": "ad1dccd538ec93d80a6c364b8b66f350060cdbc6126108645f2bca0875728fa4",
+      "cartesian_nc_safety.py": "f6e3fcd47984f5d94dd6b1d95bf4b3418d5c164fe8136126f1a89bea91689a9c",
+      "cartesian_nc_shapes.py": "49750dd13c3256116b680d80bfa2c0cc2a00998d97cb21e1e57cd86870418cb9",
+      "cartesian_nc_theme.py": "4d3f4c88fe26ed8fc9bff019cfb1529f1ba49d3293bbe098a27730c7df940363",
+      "cartesian_nc_upgrade.py": "da099e62b8cf598e5fa07fba50d248956f18073e2172b185e854231228537582",
+      "cartesian_nc_view.py": "e09ae2f7f795f6bf78d19430cb3dba9c2dad7d7105d995510d89a63851279415",
+      "cartesian_nc_workspace.py": "2f972de0500f38a5cdcca526f5d4b32a1f2326eab7e1a88d9df95d020307505d",
+      "protocol.py": "8e0a9c616b2dbadd68b5232fdbac481409fc998eaa07dd663e460ead74d9f6f3"
+    }
+  },
+  "verification_command": "./Verify_SCARA.ps1 -Gui",
+  "limitations": [
+    "Host peripherals and fake COM only; no physical robot or real ISR latency measurement."
+  ],
+  "simulation_modified_by_refactor": false,
+  "hardware_modified_by_refactor": false
+}
