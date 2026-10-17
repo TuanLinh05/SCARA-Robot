@@ -1,144 +1,74 @@
-"""SCARA Z Jog v2: both physical limits are required in telemetry."""
+"""
+============================================================================
+FILE: protocol.py
+============================================================================
+[EN] Framed USB Serial Transport & Priority Event Queue (`LineDecoder`, `SerialLink`)
+     - `LineDecoder`: Reassembles arbitrary USB byte chunks into newline-delimited
+       frames with overflow protection (`max_frame_bytes`).
+     - `SerialLink`: Manages the background USB reader thread, thread-safe command
+       writes, and a priority event queue that NEVER drops `"ack"` or `"error"`
+       events even if flooded with 10 Hz `"status"` telemetry!
 
-from dataclasses import dataclass, MISSING
-import json
-import math
+[VI] Giao vận Cổng Nối tiếp USB & Hàng đợi Sự kiện Ưu tiên (`LineDecoder`, `SerialLink`)
+     - `LineDecoder`: Ghép các mảnh byte nhận từ USB thành từng dòng hoàn chỉnh
+       phân cách bởi ký tự xuống dòng `\n` (`byte == 10`), có chống tràn bộ đệm.
+     - `SerialLink`: Quản lý luồng đọc USB chạy ngầm, khóa an toàn khi gửi lệnh,
+       và cơ chế hàng đợi ưu tiên: không bao giờ làm mất gói tin xác nhận `"ack"`
+       hoặc báo lỗi `"error"` ngay cả khi hàng đợi đầy các gói `"status"`!
+
+[DEBUG TIP / MẸO GỠ LỖI]:
+- Look at `SerialLink._event()`: when `self.events` reaches 128 items, it scans
+  for an older `"status"` item and evicts it so a newly arrived `"ack"` or `"error"`
+  is ALWAYS delivered to the GUI state machine!
+- Xem hàm `SerialLink._event()`: khi hàng đợi đủ 128 phần tử, hàm sẽ tìm và xóa bớt
+  một gói `"status"` cũ để nhường chỗ cho gói `"ack"` hoặc `"error"`, đảm bảo máy
+  trạng thái điều khiển trên PC không bao giờ bị treo chờ ACK!
+============================================================================
+"""
+
 import queue
 import secrets
 import threading
 import time
 
-STEPS_PER_REV = 3200
-MIN_RATE, MAX_RATE = 100, 6400
-
-
-def pulse_rate(speed_mm_s: float, lead_mm: float) -> int:
-    if not all(math.isfinite(x) for x in (speed_mm_s, lead_mm)):
-        raise ValueError("Thông số phải là số hữu hạn.")
-    if not 0.5 <= lead_mm <= 20 or not 0.05 <= speed_mm_s <= 10:
-        raise ValueError("Hành trình: 0,5–20 mm/vòng; tốc độ: 0,05–10 mm/s.")
-    rate = round(speed_mm_s * STEPS_PER_REV / lead_mm)
-    if not MIN_RATE <= rate <= MAX_RATE:
-        raise ValueError(
-            f"Tốc độ cần {rate:,} xung/s. Chọn tốc độ trong khoảng "
-            f"{MIN_RATE * lead_mm / STEPS_PER_REV:.3f}–"
-            f"{MAX_RATE * lead_mm / STEPS_PER_REV:.3f} mm/s."
-        )
-    return rate
-
-
-@dataclass(frozen=True)
-class Status:
-    session: int
-    job: int
-    up_ms: int
-    dir: int
-    pos: int
-    total: int
-    move: int
-    target: int
-    rate: int
-    adc: int
-    top: int
-    adc_bottom: int
-    bottom: int
-    ready_top: int
-    ready_bottom: int
-    error_top: int
-    error_bottom: int
-    conflict: int
-    ready: int
-    error: int
-    reason: str
-    # Optional metadata; retain compatibility with the original v2 firmware.
-    build: str = ""
-    pulse_us: int = 0
-    motor_error: int = -1
-    pul_pin: int = -2
-    dir_pin: int = -2
-    ena_pin: int = -2
-
-    @classmethod
-    def parse(cls, line: bytes):
-        try:
-            value = json.loads(line)
-            if (
-                value.get("type") != "status"
-                or value.get("protocol") != 2
-                or value.get("fw") != "SCARA_Z_JOG_V2"
-                or value.get("spr") != STEPS_PER_REV
-            ):
-                return None
-            fields = cls.__dataclass_fields__
-            required = [k for k, field in fields.items() if field.default is MISSING]
-            if any(type(value.get(k)) is not int for k in required if k != "reason"):
-                return None
-            if not isinstance(value.get("reason"), str) or len(value["reason"]) > 40:
-                return None
-            if (
-                value["dir"] not in (-1, 0, 1)
-                or any(
-                    value[k] not in (0, 1)
-                    for k in (
-                        "top",
-                        "bottom",
-                        "ready",
-                        "ready_top",
-                        "ready_bottom",
-                        "conflict",
-                    )
-                )
-                or value["ready"] != int(value["ready_top"] and value["ready_bottom"])
-                or not 0 <= value["adc"] <= 4095
-                or not 0 <= value["adc_bottom"] <= 4095
-                or any(
-                    not 0 <= value[k] <= 0xFFFFFFFF
-                    for k in ("session", "job", "up_ms", "move", "target", "rate")
-                )
-                or not 0 <= value["total"] <= 0xFFFFFFFFFFFFFFFF
-                or not -(1 << 63) <= value["pos"] < (1 << 63)
-            ):
-                return None
-            if "build" in value and (
-                not isinstance(value["build"], str)
-                or len(value["build"]) > 64
-                or any(
-                    not (c.isascii() and (c.isalnum() or c in "_-"))
-                    for c in value["build"]
-                )
-            ):
-                return None
-            for name, low, high in (
-                ("pulse_us", 0, 10000),
-                ("motor_error", -1, 4),
-                ("pul_pin", -4095, 1),
-                ("dir_pin", -4095, 1),
-                ("ena_pin", -4095, 1),
-            ):
-                if name in value and (
-                    type(value[name]) is not int or not low <= value[name] <= high
-                ):
-                    return None
-            return cls(**{k: value[k] for k in fields if k in value})
-        except (ValueError, TypeError, AttributeError, UnicodeError):
-            return None
-
 
 class LineDecoder:
+    """
+    [EN] Stateful byte-stream framer that splits incoming bytes on `\n` (ASCII 10).
+    [VI] Bộ tách dòng từ luồng byte thô dựa trên ký tự xuống dòng `\n` (mã ASCII 10).
+    """
+
     def __init__(
         self, parser=None, max_frame_bytes=1024, on_rejected=None, overflow_marker=None
     ):
+        """
+        [EN] Initialize the line decoder buffer and frame-size safety limits.
+        [VI] Khởi tạo bộ đệm tách dòng và giới hạn kích thước khung tin an toàn.
+        """
         self.buffer = bytearray()
         self.discard = False
-        self.parser = parser or Status.parse
+        if parser is not None:
+            self.parser = parser
+        else:
+            self.parser = lambda raw: raw
         self.max_frame_bytes = max_frame_bytes
         self.on_rejected = on_rejected
         self.overflow_marker = overflow_marker
 
     def feed(self, data):
+        """
+        [EN] Feed a `bytes`/`bytearray` chunk and return a list of parsed messages.
+             - Bytes are accumulated in `self.buffer` until `\n` (`byte == 10`).
+             - If a line exceeds `max_frame_bytes` before `\n`, `self.discard` is set
+               to `True` so the corrupted oversized line is safely dropped.
+        [VI] Nạp một mảng byte nhận từ cổng COM và trả về danh sách các bản tin hoàn chỉnh.
+             - Các byte được gom vào `self.buffer` cho đến khi gặp ký tự `\n` (`byte == 10`).
+             - Nếu một dòng dài quá `max_frame_bytes` trước khi gặp `\n`, cờ `self.discard`
+               được bật lên `True` để hủy bỏ an toàn toàn bộ dòng bị tràn đó.
+        """
         messages = []
         for byte in data:
-            if byte == 10:
+            if byte == 10:  # [EN] '\n' newline character / [VI] Ký tự xuống dòng '\n'
                 if not self.discard:
                     raw = bytes(self.buffer)
                     message = self.parser(raw)
@@ -148,26 +78,50 @@ class LineDecoder:
                         self.on_rejected(raw)
                 elif self.on_rejected and self.overflow_marker is not None:
                     self.on_rejected(self.overflow_marker)
+
+                # Reset state for the next incoming line
+                # Đặt lại bộ đệm để đón dòng dữ liệu tiếp theo
                 self.buffer.clear()
                 self.discard = False
+
             elif not self.discard:
                 if len(self.buffer) >= self.max_frame_bytes:
+                    # Line exceeded maximum allowed length -> enter discard mode until next '\n'
+                    # Dòng vượt quá độ dài tối đa -> xóa bộ đệm và bỏ qua cho tới dấu '\n' kế tiếp
                     self.buffer.clear()
                     self.discard = True
                 else:
                     self.buffer.append(byte)
+
         return messages
 
 
 class SerialLink:
+    """
+    [EN] Thread-safe USB serial connection wrapper with automatic `STOP` + `HELLO`
+         handshake on open and `STOP` on close.
+    [VI] Lớp quản lý kết nối cổng COM/USB an toàn đa luồng, tự động gửi `STOP` +
+         `HELLO <session>` khi mở cổng và gửi `STOP` an toàn trước khi đóng cổng.
+    """
+
     def __init__(self, port, serial_factory=None):
+        """
+        [EN] Open the serial port at 115200 baud, generate a random 32-bit session ID,
+             transmit the initial `STOP` + `HELLO <session>` handshake, and start the
+             background reader thread.
+        [VI] Mở cổng COM ở tốc độ 115200 baud, sinh mã phiên 32-bit ngẫu nhiên,
+             gửi chuỗi bắt tay `STOP` + `HELLO <session>`, và khởi chạy luồng đọc nền.
+        """
         if serial_factory is None:
             import serial
 
             serial_factory = serial.Serial
+
         self.events = queue.Queue(maxsize=128)
         self.lock = threading.Lock()
         self.closed = threading.Event()
+        # Generate a random non-zero 32-bit session ID (1 .. 0xFFFFFFFE)
+        # Sinh mã phiên (session ID) 32-bit ngẫu nhiên khác 0 (1 .. 0xFFFFFFFE)
         self.session = secrets.randbelow(0xFFFFFFFE) + 1
         self.serial = serial_factory(
             port=port, baudrate=115200, timeout=0.02, write_timeout=0.1
@@ -181,49 +135,98 @@ class SerialLink:
         except Exception:
             self.serial.close()
             raise
+
         self.thread = threading.Thread(
             target=self._read, daemon=True, name="USB serial"
         )
         self.thread.start()
 
     def _event(self, event):
-        try:
-            self.events.put_nowait(event)
-        except queue.Full:
-            try:
-                self.events.get_nowait()
-            except queue.Empty:
-                pass
-            self.events.put_nowait(event)
+        """
+        [EN] Enqueue an incoming event, evicting an older `"status"` frame if needed
+             so critical `"ack"` and `"error"` events are never lost.
+        [VI] Đưa sự kiện vào hàng đợi; nếu đầy sẽ tự động loại bỏ bớt một gói `"status"`
+             cũ để không bao giờ làm rơi gói `"ack"` hay `"error"`.
+        """
+        with self.events.mutex:
+            queue_is_full = (
+                self.events.maxsize > 0
+                and len(self.events.queue) >= self.events.maxsize
+            )
+            if queue_is_full:
+                # Try to find and remove the oldest "status" packet to free one slot
+                # Tìm và xóa gói "status" cũ nhất trong hàng đợi để nhường 1 chỗ trống
+                dropped = False
+                for idx, item in enumerate(self.events.queue):
+                    is_status_item = (
+                        isinstance(item, tuple) and len(item) > 0 and item[0] == "status"
+                    )
+                    if is_status_item:
+                        del self.events.queue[idx]
+                        dropped = True
+                        break
+
+                # If no old "status" could be evicted and the new event itself is "status", drop it
+                # Nếu không có gói "status" cũ nào để xóa và gói mới cũng là "status" thì bỏ qua gói mới
+                incoming_is_status = (
+                    isinstance(event, tuple) and len(event) > 0 and event[0] == "status"
+                )
+                if not dropped and incoming_is_status:
+                    return
+
+            self.events.queue.append(event)
+            self.events.unfinished_tasks += 1
+            self.events.not_empty.notify()
 
     def _make_decoder(self):
+        """
+        [EN] Factory method returning the line decoder instance for `_read()`.
+        [VI] Hàm khởi tạo bộ tách dòng `LineDecoder` dùng cho luồng đọc `_read()`.
+        """
         return LineDecoder()
 
     def _message_kind(self, message):
+        """
+        [EN] Classify a decoded message for priority queueing (`"status"` by default).
+        [VI] Phân loại bản tin đã giải mã để xếp hàng đợi ưu tiên (mặc định là `"status"`).
+        """
         return "status"
 
     def _read(self):
+        """
+        [EN] Background thread loop polling up to 256 bytes at a time from USB serial.
+        [VI] Vòng lặp luồng nền đọc liên tục tối đa 256 byte mỗi lần từ cổng USB.
+        """
         decoder = self._make_decoder()
         try:
             while not self.closed.is_set():
                 data = self.serial.read(256)
                 for message in decoder.feed(data):
-                    self._event(
-                        (self._message_kind(message), time.monotonic(), message)
-                    )
+                    kind = self._message_kind(message)
+                    timestamp = time.monotonic()
+                    self._event((kind, timestamp, message))
         except Exception as error:
             if not self.closed.is_set():
                 self._event(("error", str(error)))
 
     def send(self, line):
+        """
+        [EN] Thread-safely transmit a single ASCII command line terminated by `\n`.
+        [VI] Gửi một dòng lệnh ASCII kết thúc bằng `\n` xuống mạch (có khóa `self.lock`).
+        """
         payload = (line + "\n").encode("ascii")
         with self.lock:
             if self.closed.is_set():
                 raise OSError("Cổng COM đã đóng.")
-            if self.serial.write(payload) != len(payload):
+            bytes_written = self.serial.write(payload)
+            if bytes_written != len(payload):
                 raise OSError("Không gửi được đầy đủ lệnh USB.")
 
     def close(self):
+        """
+        [EN] Send a best-effort `STOP`, close the serial port, and join the reader thread.
+        [VI] Gửi lệnh `STOP` bảo vệ trước khi đóng cổng COM và kết thúc luồng đọc.
+        """
         if self.closed.is_set():
             return
         try:

@@ -44,4 +44,4 @@ Printed parts
 | Frame_Z_MotorConnector       | 1     |
 
 ===
-Nicely done. Now assemble the [arm](../arm/README.md) if you haven't done so by now.
+Nicely done. Now assemble the [arm](../arm/BOM.md) if you haven't done so by now.

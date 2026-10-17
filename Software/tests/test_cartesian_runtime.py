@@ -45,6 +45,11 @@ class Runtime(
     """Use production controllers with a recording link and no Tk interpreter."""
 
     def __init__(self, state, directory):
+        self.init_runtime_state(
+            NCConfig(),
+            directory / "config.json",
+            directory / "events.jsonl",
+        )
         self.sent = []
         self.link = SimpleNamespace(
             session=state.session,
@@ -54,30 +59,15 @@ class Runtime(
         )
         self.state = state
         self.rx = self.opened = time.monotonic()
-        self.config = NCConfig()
         self.config_error = None
         self.model = self.config.model(state)
         self.local_reference = True
-        self.plan_token = 0
-        self.plan_results = queue.Queue()
-        self.planning = False
         self.job = state.job
-        self.active_job = self.pending = self.expect_epoch = self.task_kind = None
-        self.commands = []
-        self.last_keep = self.started = 0
-        self.trace = None
         self.demo = True
-        self.event_log_path = directory / "events.jsonl"
         self.message = Value()
         self.log_text = Value()
         self.bk_note = Value()
         self.follow_enabled = Value(False)
-        self.follow_target = None
-        self.follow_revision = 0
-        self.program_points = ()
-        self.program_index = self.program_wait = 0
-        self.path_upload = self.path_run = None
-        self.active_purpose = self.preview = None
         self.bk_active = self.bk_pending = False
         self._foreground = lambda: True
 
@@ -428,6 +418,26 @@ class SerialTransportTests(unittest.TestCase):
         count = len(self.serial.writes)
         self.link.close()
         self.assertEqual(len(self.serial.writes), count)
+
+    def test_full_event_queue_never_drops_ack_when_flooded_with_status(self):
+        ack_msg = Ack(self.link.session, 1, "MOVE", 1, "ok")
+        self.link._event(("ack", 1.0, ack_msg))
+        for i in range(200):
+            self.link._event(("status", float(i), fixture()))
+        drained = []
+        while not self.link.events.empty():
+            drained.append(self.link.events.get_nowait())
+        acks = [ev for ev in drained if ev[0] == "ack"]
+        self.assertEqual(acks, [("ack", 1.0, ack_msg)])
+
+    def test_foreign_job_ack_is_ignored_without_clearing_pending(self):
+        app = Runtime(fixture(), Path(__file__).resolve().parents[1] / "build/refactor/runtime")
+        app.active_job = 5
+        app.pending = ("MOVE", time.monotonic())
+        app._handle_ack(Ack(app.link.session, 4, "MOVE", 1, "ok"), time.monotonic())
+        self.assertIsNotNone(app.pending)
+        app._handle_ack(Ack(app.link.session, 5, "MOVE", 1, "ok"), time.monotonic())
+        self.assertIsNone(app.pending)
 
 
 if __name__ == "__main__":

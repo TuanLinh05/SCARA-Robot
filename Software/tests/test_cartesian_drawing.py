@@ -6,7 +6,7 @@ from dataclasses import replace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from support import fixture
-from cartesian_nc_model import NCConfig
+from cartesian_nc_model import NCConfig, round_nearest
 from cartesian_nc_drawing import (
     BKSettings,
     bk_strokes,
@@ -16,8 +16,20 @@ from cartesian_nc_drawing import (
     ink_distance,
     fit_drawing,
     segment_distance,
+    optimize_strokes,
+    pen_up_travel_distance,
+    reverse_stroke,
 )
 from cartesian_nc_curves import flatten_cubic
+from cartesian_nc_vector import (
+    parse_svg,
+    parse_dxf,
+    parse_gcode,
+    load_vector_strokes,
+    register_custom_pattern,
+)
+import tempfile
+import os
 
 
 class DrawingTests(unittest.TestCase):
@@ -189,6 +201,82 @@ class DrawingTests(unittest.TestCase):
                 all(point.name.startswith(word) for point in program.points)
             )
 
+    def test_optimize_strokes_reduces_pen_up_travel_and_preserves_parts(self):
+        start_xy = self.model.fk(self.model.from_steps((35200, 0, 1800)))[:2]
+        for pattern, size in (("BK", 20), ("LINH", 40), ("THOA", 40), ("FLOWER", 36)):
+            settings = BKSettings(pattern=pattern, size_mm=size, paper_z=10)
+            raw = pattern_strokes(settings)
+            opt = optimize_strokes(raw, start_xy=start_xy)
+            self.assertEqual(len(opt), len(raw))
+            self.assertLessEqual(
+                pen_up_travel_distance(opt, start_xy),
+                pen_up_travel_distance(raw, start_xy) + 1e-9,
+            )
+            if pattern in ("BK", "LINH", "THOA"):
+                self.assertLess(
+                    pen_up_travel_distance(opt, start_xy),
+                    pen_up_travel_distance(raw, start_xy),
+                )
+            for stroke in opt:
+                for a, b in zip(stroke, stroke[1:]):
+                    mid = ((a.xy[0] + b.xy[0]) / 2, (a.xy[1] + b.xy[1]) / 2)
+                    self.assertLess(ink_distance(mid, b.part, settings), 0.05)
+
+    def test_vector_import_svg_dxf_gcode_and_custom_compile(self):
+        svg_text = '<svg><path d="M 0 0 L 20 0 L 20 10 L 0 10 Z M 5 5 C 8 9 12 9 15 5"/></svg>'
+        svg_strokes = parse_svg(svg_text)
+        self.assertEqual(len(svg_strokes), 2)
+
+        dxf_text = "\n".join(
+            [
+                "0", "SECTION", "2", "ENTITIES",
+                "0", "LINE", "10", "0.0", "20", "0.0", "11", "10.0", "21", "10.0",
+                "0", "CIRCLE", "10", "5.0", "20", "5.0", "40", "3.0",
+                "0", "ENDSEC", "0", "EOF",
+            ]
+        )
+        dxf_strokes = parse_dxf(dxf_text)
+        self.assertEqual(len(dxf_strokes), 2)
+
+        gcode_text = "\n".join(
+            [
+                "G0 X0 Y0 Z5",
+                "G1 Z0 F300",
+                "G1 X12 Y0",
+                "G1 X12 Y8",
+                "G0 Z5",
+                "G0 X2 Y2",
+                "G1 Z0",
+                "G2 X6 Y2 I2 J0",
+                "G0 Z5",
+            ]
+        )
+        gcode_strokes = parse_gcode(gcode_text)
+        self.assertEqual(len(gcode_strokes), 2)
+
+        with tempfile.NamedTemporaryFile("w", suffix=".svg", delete=False, encoding="utf-8") as handle:
+            handle.write(svg_text)
+            svg_path = handle.name
+        try:
+            loaded = load_vector_strokes(svg_path)
+            key = register_custom_pattern("CUSTOM", "Mẫu SVG", loaded)
+            self.assertEqual(key, "CUSTOM")
+            settings = BKSettings(pattern="CUSTOM", size_mm=24, paper_z=10)
+            program = compile_bk(self.model, (35200, 0, 1800), settings)
+            self.assertLessEqual(program.max_model_error_mm, 0.25)
+            self.assertEqual(sum(op.kind == "lower" for op in program.operations), 2)
+        finally:
+            if os.path.exists(svg_path):
+                os.remove(svg_path)
+
+    def test_round_nearest_symmetric_halfway_rounding(self):
+        self.assertEqual(round_nearest(2.5), 3)
+        self.assertEqual(round_nearest(3.5), 4)
+        self.assertEqual(round_nearest(-2.5), -3)
+        self.assertEqual(round_nearest(-3.5), -4)
+        self.assertEqual(round_nearest(0.0), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
+

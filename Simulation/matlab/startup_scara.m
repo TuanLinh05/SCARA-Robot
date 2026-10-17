@@ -1,10 +1,8 @@
 function root = startup_scara()
-% Add only source folders, never generated output/cache folders.
+% Source only; never add generated/cache directories to the MATLAB path.
 root=fileparts(mfilename('fullpath'));
-addpath(root,fullfile(root,'config'),fullfile(root,'simulink'), ...
-    fullfile(root,'examples'),fullfile(root,'tests'));
+addpath(root,fullfile(root,'config'),fullfile(root,'simulink'),fullfile(root,'tests'));
 addpath(genpath(fullfile(root,'src')));
-% Keep Simulink-generated files out of source folders/current directory.
 if ~isempty(which('Simulink.fileGenControl'))
     cache=fullfile(root,'output','cache');codegen=fullfile(root,'output','codegen');
     if ~isfolder(cache),mkdir(cache);end

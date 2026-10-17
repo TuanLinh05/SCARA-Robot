@@ -1,75 +1,101 @@
-function ref = scara_reference(kind,p)
-% Cartesian trajectories with quintic segment timing and brush lift/lower.
-% 'circle', 'flower', 'square', 'bk', or a CSV: x_mm,y_mm,pen (0 or 1).
-if nargin<1, kind='flower'; end
-if nargin<2, p=scara_params(); end
-dt=p.dt;
-if isfile(kind)
-    data=readmatrix(kind);
-    if size(data,2)~=3 || size(data,1)<2 || any(~isfinite(data),'all') ...
-            || any(~ismember(data(:,3),[0 1]))
-        error('scara:csv','CSV must have finite columns x_mm,y_mm,pen, with pen 0 or 1.');
-    end
-    pts=data(:,1:2)*1e-3; pen=data(:,3)>0;
-    % The pen state on row i applies to movement from row i-1 to row i.
-    xyz=[pts(1,:) p.penLift]; t=0;
-    for k=2:size(pts,1)
-        h=p.penLift;
-        if pen(k),h=-p.brushCompression;end
-        [t,xyz]=segment(t,xyz,[pts(k-1,:) h],0.4,dt);
-        duration=max(0.4,norm(pts(k,:)-pts(k-1,:))/0.020);
-        [t,xyz]=segment(t,xyz,[pts(k,:) h],duration,dt);
-    end
-    [t,xyz]=segment(t,xyz,[pts(end,:) p.penLift],0.4,dt);
-else
-    name=lower(char(kind));
-    switch name
-        case 'bk'
-            [t,xyz,geometry]=scara_bk_path(p);
-        case {'circle','flower'}
-            drawtime=8;
-            td=(0:dt:drawtime)'; s=quintic(td/drawtime);
-            a=2*pi*s;
-            if strcmp(name,'flower')
-                r=0.023+0.011*cos(5*a);
-            else
-                r=0.034+zeros(size(a));
-            end
-            xy=[r.*cos(a),r.*sin(a)];
-            xyz=[xy(1,:) p.penLift]; t=0;
-            [t,xyz]=segment(t,xyz,[xy(1,:) -p.brushCompression],0.6,dt);
-            xyz=[xyz;xy(2:end,:) -p.brushCompression*ones(numel(td)-1,1)];
-            t=[t;t(end)+td(2:end)];
-        case 'square'
-            corners=0.032*[1 -1;1 1;-1 1;-1 -1;1 -1];
-            xyz=[corners(1,:) p.penLift];t=0;
-            [t,xyz]=segment(t,xyz,[corners(1,:) -p.brushCompression],0.6,dt);
-            for k=2:size(corners,1)
-                [t,xyz]=segment(t,xyz,[corners(k,:) -p.brushCompression],2,dt);
-            end
-        otherwise
-            error('scara:path','Use circle, flower, square, bk, or a CSV filename.');
-    end
-    [t,xyz]=segment(t,xyz,[xyz(end,1:2) p.penLift],0.6,dt);
-end
-q=zeros(numel(t),3);
-for k=1:numel(t),q(k,:)=scara_ik(xyz(k,:)',p)';end
-q(:,1:2)=unwrap(q(:,1:2));
-dq=zeros(size(q));ddq=dq;
-for j=1:3
-    dq(:,j)=gradient(q(:,j),dt); ddq(:,j)=gradient(dq(:,j),dt);
-end
-ref=struct('t',t,'xyz',xyz,'q',q,'dq',dq,'ddq',ddq, ...
-    'pen',xyz(:,3)<0,'kind',char(kind));
-ref.signal=[t q dq ddq];
-if exist('geometry','var'),ref.geometry=geometry;end
-end
+function ref = scara_reference(kind, p)
+%SCARA_REFERENCE Load or generate an offline R9 stepper pulse reference trajectory.
+%
+% [EN] Reuses the Python GUI/R9 integer DDA trajectory planner offline instead of
+%      duplicating a second planner in MATLAB. Results are cached in a `.mat` file
+%      and automatically regenerated if any Python planner source or calibration
+%      JSON file is newer than the cache.
+%
+% [VI] Tai hoac sinh quy dao xung tham chieu bang bo lap quy dao DDA so nguyen R9
+%      viet bang Python (khong can viet lai bo lap quy dao thu hai trong MATLAB).
+%      Ket qua duoc luu dem (cache) vao file `.mat` va tu dong cap nhat neu file
+%      ma nguon Python hoac file JSON hieu chuan co thay doi moi hon.
 
-function s=quintic(u)
-s=u.^3.*(10-15*u+6*u.^2);
-end
-function [t,xyz]=segment(t,xyz,target,duration,dt)
-n=max(2,ceil(duration/dt)); local=(1:n)'/n;
-new=xyz(end,:)+(target-xyz(end,:)).*quintic(local);
-t=[t;t(end)+(1:n)'*dt];xyz=[xyz;new];
+    % -------------------------------------------------------------------------
+    % Step 1: Set default arguments and validate pattern name
+    % Buoc 1: Gan tham so mac dinh va kiem tra ten hinh mẫu (pattern)
+    % -------------------------------------------------------------------------
+    if nargin < 2
+        p = scara_params();
+    end
+    if nargin < 1
+        kind = 'flower';
+    end
+
+    kind = lower(char(kind));
+    validPatterns = {'flower', 'circle', 'square', 'star', 'heart', 'bk', 'linh', 'thoa'};
+    assert(ismember(kind, validPatterns), ...
+        'scara:pattern', 'Choose flower/circle/square/star/heart/BK/LINH/THOA.');
+
+    % -------------------------------------------------------------------------
+    % Step 2: Check whether a valid, up-to-date .mat cache already exists
+    % Buoc 2: Kiem tra xem file cache .mat da ton tai va con moi hay khong
+    % -------------------------------------------------------------------------
+    folder = fullfile(p.outputRoot, 'reference');
+    file = fullfile(folder, [kind '.csv']);
+    meta = fullfile(folder, [kind '.json']);
+    cache = fullfile(folder, [kind '.mat']);
+
+    sources = [ ...
+        dir(fullfile(fileparts(p.simulationRoot), 'Software', 'src', '*.py')); ...
+        dir(fullfile(p.root, 'tools', '*.py')); ...
+        dir(fullfile(p.root, 'config', 'robot_calibration.json')) ...
+    ];
+    stamp = max([sources.datenum]);
+
+    if isfile(cache)
+        saved = load(cache, 'ref', 'sourceStamp');
+        if saved.sourceStamp >= stamp
+            ref = saved.ref;
+            check();
+            return;
+        end
+    end
+
+    % -------------------------------------------------------------------------
+    % Step 3: Invoke offline Python exporter if cache is missing or stale
+    % Buoc 3: Goi script Python xuat quy dao neu chua co cache hoac cache da cu
+    % -------------------------------------------------------------------------
+    script = fullfile(p.root, 'tools', 'export_firmware_reference.py');
+    if ~isfile(file) || ~isfile(meta) || isfile(cache)
+        cmd = sprintf('"%s" "%s" --pattern %s --output "%s"', ...
+            p.python, script, upper(kind), folder);
+        [code, msg] = system(cmd);
+        assert(code == 0, 'scara:python', 'Offline planner failed: %s', msg);
+    end
+
+    % -------------------------------------------------------------------------
+    % Step 4: Parse exported CSV/JSON, reconstruct joint angles, and save cache
+    % Buoc 4: Doc file CSV/JSON, phuc hoi goc khop tu xung va luu vao cache .mat
+    % -------------------------------------------------------------------------
+    d = readmatrix(file);
+    ref.t = d(:, 1);
+    ref.steps = d(:, 2:4);
+    ref.xyz = d(:, 5:7);
+    ref.pen = logical(d(:, 8));
+    ref.valid = d(:, 9);
+    ref.q = scara_from_steps(ref.steps, p);
+    ref.meta = jsondecode(fileread(meta));
+    ref.kind = kind;
+
+    sourceStamp = stamp;
+    save(cache, 'ref', 'sourceStamp');
+    delete(file);
+    delete(meta);
+
+    check();
+
+    % -------------------------------------------------------------------------
+    % Nested helper: Verify sample time dt and calibration match scara_params
+    % Ham con: Kiem tra chu ky lay mau dt va thong so hieu chuan khop voi p
+    % -------------------------------------------------------------------------
+    function check()
+        assert(abs(ref.meta.dt - p.dt) < 1e-10, ...
+            'scara:sample', 'Reference dt must equal model dt.');
+        f = ref.meta.calibration.factors_pp_unit;
+        expectedFactors = [p.stepsPerMeterZ / 1000; p.stepsPerDegree];
+        assert(max(abs(f(:) - expectedFactors)) < 1e-9 ...
+            && abs(ref.meta.calibration.coupling - p.coupling) < 1e-9, ...
+            'scara:calibration', 'Edit config/robot_calibration.json to change the planner calibration.');
+    end
 end

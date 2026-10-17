@@ -10,16 +10,17 @@ static bool keepalive = true, stuck = false;
 static bool expect_elbow_hold=true;
 static int open_axis = -1, open_side;
 static int both_axis=-1;
-static double f1 = 40.0 / 3.0, f2 = 40.0;
+static double f1 = 80.0 / 3.0, f2 = 40.0, k_mech = 1.0 / 3.0;
+static double high_limit_deg[2] = {90.0, 90.0};
 static int32_t off[3];
 static double q1(void) { return (c.pos[1] + off[1]) / f1; }
-static double q2(void) { return (c.pos[2] + off[2]) / f2 - (4.0 / 3.0) * q1(); }
+static double q2(void) { return (c.pos[2] + off[2]) / f2 - k_mech * q1(); }
 static void sample(void)
 {
     uint32_t now = (uint32_t)(us / 1000);
     double coordinate[3] = {c.pos[0] + off[0], q1(), q2()};
     for (unsigned a = 0; a < 3; a++) {
-        bool p = coordinate[a] >= (a ? 90 : 40000), n = coordinate[a] <= (a ? -90 : 0);
+        bool p = coordinate[a] >= (a ? high_limit_deg[a - 1] : 40000), n = coordinate[a] <= (a ? -90 : 0);
         /* PB10 is the DIR-HIGH stop: negative normalized elbow on this motor. */
         if(a==CT_J2) { bool t=p; p=n; n=t; }
         if (stuck) p = n = false;
@@ -37,10 +38,10 @@ static enum ct_result cmd(const char *s)
 static void boot(double a, double b)
 {
     ct_init(&c); us = 30000; due = 0; keepalive = true; stuck = false; expect_elbow_hold=true; open_axis = both_axis = -1;
-    off[0] = 16000; off[1] = (int32_t)lround(a * f1); off[2] = (int32_t)lround((b + (4.0 / 3.0) * a) * f2);
+    off[0] = 16000; off[1] = (int32_t)lround(a * f1); off[2] = (int32_t)lround((b + k_mech * a) * f2);
     sample(); us += 21000; sample();
     assert(cmd("HELLO 7") == CT_OK);
-    assert(cmd("GEOM 7 1333333 1638400 13653 40960 16 8 8") == CT_OK);
+    assert(cmd("GEOM 7 333333 1638400 27307 40960 16 16 8") == CT_OK);
     assert(cmd("SPAN 7 -90000 90000 -90000 90000 0") == CT_OK);
     assert(cmd("PARK 7 0 45000 3000") == CT_OK);
     assert(cmd("TUNE 7 400 800 40000 100000 512 1024") == CT_OK);
@@ -64,8 +65,9 @@ static void advance(unsigned milliseconds)
             }
         }
         if (c.stage == HS_J1 && expect_elbow_hold) {
-            if(fabs(q2())>=1.0) fprintf(stderr,"elbow drift a=%f b=%f beta=%lld probe=%d/%d f1=%f\n",q1(),q2(),(long long)c.beta,c.probe_da,c.probe_db,f1);
-            assert(fabs(q2()) < 1.0);
+            double mid_q2 = 0.5 * (high_limit_deg[1] - 90.0);
+            if(fabs(q2() - mid_q2)>=1.0) fprintf(stderr,"elbow drift a=%f b=%f beta=%lld probe=%d/%d f1=%f\n",q1(),q2(),(long long)c.beta,c.probe_da,c.probe_db,f1);
+            assert(fabs(q2() - mid_q2) < 1.0);
         }
         enum ct_result r = ct_service(&c, now);
         if (r == CT_START) due = us + 50000;
@@ -77,7 +79,9 @@ static void finish_home(void)
     if (!c.referenced) fprintf(stderr, "init failed reason=%s stage=%d phase=%d err=%d n1=%u n2=%u q1=%f q2=%f z=%d\n",
         c.reason,c.stage,c.cal[c.selected].phase,c.cal[c.selected].error,c.cal[c.selected].n1,c.cal[c.selected].n2,q1(),q2(),c.pos[0]+off[0]);
     assert(c.referenced && c.stage == HS_READY);
-    assert(abs((int)c.range[1] - (int)lround(180*f1)) <= 3 && abs((int)c.range[2] - 7200) <= 4 && c.range[0] == 40000);
+    assert(abs((int)c.range[1] - (int)lround((90 + high_limit_deg[0]) * f1)) <= 3);
+    assert(abs((int)c.range[2] - (int)lround((90 + high_limit_deg[1]) * f2)) <= 4 && c.range[0] == 40000);
+    assert(c.factor[1] == 27307 && c.factor[2] == 40960);
     assert(fabs(q1()) < .2 && fabs(q2() - 45) < .2);
     assert(abs(c.pos[0] + off[0] - 35200) <= 2);
 }
@@ -87,15 +91,15 @@ int main(void)
     boot(20, -10); assert(cmd("MOVE 7 1 20000 0 1800 800") == CT_REJECTED);
     initialize();
     int32_t origin[3]; memcpy(origin, c.origin, sizeof(origin));
-    assert(cmd("MOVE 7 2 20000 400 2800 800") == CT_START);
+    assert(cmd("MOVE 7 2 20000 800 1600 800") == CT_START);
     for (unsigned i = 0; i < 10000 && c.running; i++) advance(20);
     assert(c.referenced && !c.running);
-    assert(c.pos[0]-origin[0] == 20000 && c.pos[1]-origin[1] == 400 && c.pos[2]-origin[2] == 2800);
+    assert(c.pos[0]-origin[0] == 20000 && c.pos[1]-origin[1] == 800 && c.pos[2]-origin[2] == 1600);
     assert(fabs(q1()-30)<.2 && fabs(q2()-30)<.2);
-    assert(cmd("MOVE 7 3 25000 400 2400 800") == CT_START);
+    assert(cmd("MOVE 7 3 25000 800 1400 800") == CT_START);
     keepalive = false; advance(400); assert(!ct_busy(&c) && !c.referenced && !strcmp(c.reason,"heartbeat_lost"));
     boot(-50, 30); initialize();
-    assert(cmd("MOVE 7 2 30000 -400 0 800") == CT_START);
+    assert(cmd("MOVE 7 2 30000 -800 0 800") == CT_START);
     uint64_t before[3]; memcpy(before,c.total,sizeof(before));
     open_axis = 2; open_side = 1; advance(20);
     assert(!ct_busy(&c) && !c.referenced && !strcmp(c.reason,"j2_limit"));
@@ -123,7 +127,7 @@ int main(void)
     assert(cmd("INIT 7 1") == CT_REJECTED && !strcmp(c.reply,"both_open"));
     /* One DDA shoulder edge can decrease q2 even on a net-positive segment. */
     boot(0,0); initialize();
-    assert(cmd("MOVE 7 2 35000 100 2100 800")==CT_START);
+    assert(cmd("MOVE 7 2 34800 100 2000 800")==CT_START);
     c.accum[1]=c.ticks-1; c.accum[2]=0;
     ct_sample(&c,2,1,0,(uint32_t)(us/1000));
     assert(ct_next_mask(&c)==0 && !c.referenced && !strcmp(c.reason,"edge_limit"));
@@ -249,34 +253,62 @@ int main(void)
         assert(!memcmp(accum,c.accum,sizeof(accum)) && !memcmp(counts,c.total,sizeof(counts)));
         finish_home();
     }
-    /* Reproduce the reported failure with real -A/3 absolute passive motion.
-     * The old 2/3 elbow coefficient hits J2 while seeking J1; 4/3 holds it. */
-    boot(80,-10); expect_elbow_hold=false;
-    assert(cmd("COUPLE 7 0 64")==CT_OK); /* reproduce the fixed-coefficient old behavior */
-    assert(cmd("GEOM 7 666667 1638400 13653 40960 16 8 8")==CT_OK);
+    /* Wrong fixed coupling without probe hits J2 guard during J1 sweep. */
+    boot(-80,-10); expect_elbow_hold=false;
+    assert(cmd("COUPLE 7 0 64")==CT_OK);
+    assert(cmd("GEOM 7 -666667 1638400 27307 40960 16 16 8")==CT_OK);
     assert(cmd("INIT 7 1")==CT_START);
     for(unsigned t=0;t<15000 && ct_busy(&c);t++) advance(100);
     assert(!c.referenced && !strcmp(c.reason,"j2_guard") && c.stage==HS_FAILED);
-    boot(80,-10); initialize(); assert(llabs(c.beta-4*CT_Q)<CT_Q/100);
-    boot(-80,10); initialize(); assert(llabs(c.beta-4*CT_Q)<CT_Q/100);
-    /* Real J1 pulse scale can differ from the nominal 3:1 setting. Measure
-     * dB/dA before the J1 sweep; never use the nominal beta for that sweep. */
-    f1=80.0/3.0; boot(20,-10); initialize();
-    assert(c.coupling_ready && llabs(c.beta-2*CT_Q)<CT_Q/100);
-    assert(abs(c.coupling_ppm-1333333)<5000);
-    f1=40.0/3.0;
-    /* Three times the nominal J1 scale reproduces the user's 20--40 degree
-     * collision: fixed beta=4 overcompensates, measured beta~=4/3 holds. */
-    f1=40; boot(20,-10); expect_elbow_hold=false;
-    assert(cmd("COUPLE 7 0 128")==CT_OK); assert(cmd("INIT 7 1")==CT_START);
+    boot(80,-10); initialize(); assert(llabs(c.beta-CT_Q/2)<100 && c.coupling_ppm==333333);
+    boot(-80,10); initialize(); assert(llabs(c.beta-CT_Q/2)<100 && c.coupling_ppm==333333);
+    /* Proposal 2: Mismatched J1 microstep DIP (e.g. x8 vs configured x16) is
+     * caught at HS_COUPLE_SCAN as coupling_mismatch before the long J1 sweep. */
+    f1=40.0/3.0; boot(20,-10); expect_elbow_hold=false;
+    assert(cmd("INIT 7 1")==CT_START);
     for(unsigned t=0;t<18000 && ct_busy(&c);t++) advance(100);
-    assert(!c.referenced && !strcmp(c.reason,"j2_guard"));
-    assert(fabs(q1()-20)>20 && fabs(q1()-20)<40);
-    boot(20,-10); initialize(); assert(c.coupling_ready && llabs(c.beta-4*CT_Q/3)<CT_Q/50);
-    f1=40.0/3.0;
-    boot(20,-10); assert(cmd("GEOM 7 666667 1638400 13653 40960 16 8 8")==CT_OK);
-    initialize(); assert(c.coupling_ready && llabs(c.beta-4*CT_Q)<CT_Q/100);
-    boot(20,-10); assert(cmd("GEOM 7 -1333333 1638400 13653 40960 16 8 8")==CT_OK);
+    assert(!c.referenced && !strcmp(c.reason,"coupling_mismatch") && c.beta_measured>0);
+    f1=80.0/3.0;
+    /* Proposal 1: Mismatched switch span / J1 scale (>5% error) is rejected
+     * with scale_mismatch when COUPLE auto-probe is disabled. */
+    f1=40.0/3.0; k_mech=1.0/6.0; boot(20,-10); expect_elbow_hold=false;
+    assert(cmd("COUPLE 7 0 128")==CT_OK);
+    assert(cmd("INIT 7 1")==CT_START);
+    for(unsigned t=0;t<18000 && ct_busy(&c);t++) advance(100);
+    assert(!c.referenced && !strcmp(c.reason,"scale_mismatch"));
+    f1=80.0/3.0; k_mech=1.0/3.0;
+    /* Proposal 1: Real hardware 177.5 deg switch span (4733 J1, 7104 J2 pulses)
+     * retains exact mechanical factor (27307, 40960) without scale distortion
+     * and records true span_md in telemetry. */
+    high_limit_deg[0]=87.5; high_limit_deg[1]=87.6;
+    boot(20,-10); initialize();
+    assert(c.factor[1]==27307 && c.factor[2]==40960 && c.coupling_ppm==333333);
+    assert(abs(c.span_md[0]-177500)<=60 && abs(c.span_md[1]-177600)<=60);
+    assert(cmd("MOVE 7 2 20000 800 1600 800")==CT_START);
+    for(unsigned i=0;i<10000 && c.running;i++) advance(20);
+    assert(c.referenced && !c.running && fabs(q1()-30)<0.05 && fabs(q2()-30)<0.05);
+    high_limit_deg[0]=90.0; high_limit_deg[1]=90.0;
+    /* Proposal 3: BACKLASH emits compensation pulses on direction reversal
+     * without changing logical pos, and Fast Z MOVE supports up to 6400 pps. */
+    boot(0,0); initialize();
+    assert(cmd("BACKLASH 7 6 10")==CT_OK);
+    assert(cmd("MOVE 7 2 20000 400 1900 800")==CT_START);
+    for(unsigned i=0;i<5000 && c.running;i++) advance(10);
+    assert(!c.running && c.referenced);
+    uint64_t tot1=c.total[1], tot2=c.total[2];
+    uint32_t comp1_before=c.comp_total[1], comp2_before=c.comp_total[2];
+    assert(cmd("MOVE 7 3 20000 200 1800 800")==CT_START);
+    for(unsigned i=0;i<5000 && c.running;i++) advance(10);
+    assert(!c.running && c.referenced);
+    assert(c.pos[1]-c.origin[1]==200 && c.pos[2]-c.origin[2]==1800);
+    assert(c.comp_total[1]-comp1_before==6 && c.comp_total[2]-comp2_before==10);
+    assert(c.total[1]-tot1==206 && c.total[2]-tot2==110);
+    /* Fast pure-Z move at 4800 pps allowed; arm move at 4800 pps rejected. */
+    assert(cmd("MOVE 7 4 28000 200 1800 4800")==CT_START);
+    for(unsigned i=0;i<5000 && c.running;i++) advance(10);
+    assert(!c.running && c.referenced && c.pos[0]-c.origin[0]==28000);
+    assert(cmd("MOVE 7 5 28000 300 1800 4800")==CT_REJECTED);
+    boot(20,-10); assert(cmd("GEOM 7 -333333 1638400 27307 40960 16 16 8")==CT_OK);
     assert(cmd("INIT 7 1")==CT_START);
     for(unsigned t=0;t<18000 && ct_busy(&c);t++) advance(100);
     assert(!c.referenced && !strcmp(c.reason,"coupling_sign") && c.probe_da && c.probe_db);
@@ -287,7 +319,37 @@ int main(void)
     for(unsigned t=0;t<18000 && c.stage!=HS_COUPLE_PROBE;t++) advance(100);
     assert(c.stage==HS_COUPLE_PROBE); keepalive=false; advance(400);
     assert(!ct_busy(&c) && !c.referenced && !strcmp(c.reason,"heartbeat_lost"));
-    puts("core: full coupled HOME, repeatability, exact DDA, cross-axis switches, watchdog, abort, stuck switch, wrap passed");
+    /* Improvement 1: Quick Re-Home (`INIT <session> <job> QUICK`) after a full
+     * calibration re-latches negative switches using saved_range and completes
+     * in less than half the time of a full calibration. */
+    boot(20,-10);
+    uint64_t t0_full=us;
+    initialize();
+    uint64_t dt_full=us-t0_full;
+    assert(c.has_calibrated && c.saved_range[0]==40000 && c.saved_range[1]==4800 && c.saved_range[2]==7200);
+    assert(cmd("HOLD 7 J1 0")==CT_HOLD_CHANGE && !c.referenced && c.has_calibrated);
+    assert(cmd("HOLD 7 J1 1")==CT_HOLD_CHANGE);
+    uint64_t t0_quick=us;
+    assert(cmd("INIT 7 2 QUICK")==CT_START && c.quick_init);
+    finish_home();
+    uint64_t dt_quick=us-t0_quick;
+    assert(c.referenced && !c.quick_init && dt_quick*2 < dt_full);
+    assert(c.range[0]==40000 && c.range[1]==4800 && c.range[2]==7200);
+    assert(fabs(q1())<0.2 && fabs(q2()-45)<0.2 && abs(c.pos[0]+off[0]-35200)<=2);
+    /* Improvement 4: Soft deceleration ramp over the final 256 pulses before
+     * expected switch contact (`n1`) during `HMC_SWEEP_N`. */
+    c.mode=CT_CAL; c.selected=CT_Z; c.cal_scale=CT_Q;
+    c.cal[0].phase=HMC_SWEEP_N; c.cal[0].n1=40000; c.cal[0].fine_rate=400;
+    c.cm.rate=4800; c.cm.start_ms=100; c.ramp_ms=100;
+    c.cm.move=20000;
+    uint32_t p_cruise=ct_period_us(&c, 3000);
+    c.cm.move=40000-32;
+    uint32_t p_near=ct_period_us(&c, 3000);
+    c.cm.move=40000;
+    uint32_t p_contact=ct_period_us(&c, 3000);
+    assert(p_cruise==209 && p_near>p_cruise*2 && p_contact==2500);
+    c.mode=CT_IDLE;
+    puts("core: full coupled HOME, quick HOME, soft decel, repeatability, exact DDA, cross-axis switches, watchdog, abort, stuck switch, wrap passed");
     return 0;
 }
 

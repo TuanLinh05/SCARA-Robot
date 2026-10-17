@@ -88,7 +88,7 @@ class ControllerTests(unittest.TestCase):
     def test_position_and_effort_modes_devices_logs_and_completion(self):
         p = json.loads((PROJECT.parent/'common/config/scara.json').read_text(encoding='utf-8'))
         defaults = json.loads((PROJECT/'config/demo.json').read_text(encoding='utf-8'))
-        for mode in ('position','pid'):
+        for mode in ('position','pid','stepper'):
             robot, log = FakeRobot(p), MemoryLog()
             module_path = PROJECT/'controllers/scara_draw/scara_draw.py'
             spec = importlib.util.spec_from_file_location('scara_controller_test',module_path)
@@ -113,7 +113,7 @@ class ControllerTests(unittest.TestCase):
                 else:
                     self.assertGreater(motor.position_calls,1000)
                     self.assertEqual(motor.effort_calls,0)
-            if mode == 'position':
+            if mode in ('position','stepper'):
                 self.assertTrue(any(row['ink_enabled'] for row in log.rows))
                 self.assertTrue(all(row['shoulder_command_Nm'] == '' for row in log.rows))
 

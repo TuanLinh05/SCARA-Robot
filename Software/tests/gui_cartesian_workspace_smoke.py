@@ -173,8 +173,8 @@ try:
     # Default background mode continues a checked program across dwell.
     current = app.model.fk(app.model.from_steps(app.state.pos))
     app.points = [
-        Setpoint("same", *current, 5, 1),
-        Setpoint("next", *app.model.fk((8, 50, z)), 5, 0),
+        Setpoint("same", *current, 8, 1),
+        Setpoint("next", *app.model.fk((8, 50, z)), 8, 0),
     ]
     app.start_program()
     until(lambda: bool(app.program_points) and app.program_index == 1, 2)

@@ -52,16 +52,16 @@ class NCModelTests(unittest.TestCase):
 
     def test_z_three_mm_s_conversion_migration_and_rate_status(self):
         cfg = NCConfig()
-        self.assertEqual(cfg.z_home_speed_mm_s, 3)
-        self.assertEqual(cfg.z_home_pps, 4800)
-        self.assertEqual(replace(cfg, lead_mm_rev=4).validate().z_home_pps, 2400)
-        self.assertEqual(replace(cfg, microsteps=(8, 8, 8)).validate().z_home_pps, 2400)
+        self.assertEqual(cfg.z_home_speed_mm_s, 2)
+        self.assertEqual(cfg.z_home_pps, 3200)
+        self.assertEqual(replace(cfg, lead_mm_rev=4).validate().z_home_pps, 1600)
+        self.assertEqual(replace(cfg, microsteps=(8, 8, 8)).validate().z_home_pps, 1600)
         with self.assertRaises(ValueError):
-            replace(cfg, lead_mm_rev=1).validate()
+            replace(cfg, lead_mm_rev=0.5).validate()
         old = asdict(cfg)
         old.pop("z_home_speed_mm_s")
         old["z_home_pps"] = 1600
-        self.assertEqual(NCConfig.from_dict(old).z_home_pps, 4800)
+        self.assertEqual(NCConfig.from_dict(old).z_home_pps, 3200)
         current = asdict(cfg)
         current["z_home_speed_mm_s"] = 2.5
         self.assertEqual(NCConfig.from_dict(current).z_home_pps, 4000)
@@ -206,24 +206,20 @@ class NCModelTests(unittest.TestCase):
             p1 = round(sign * 90 * model.factors[1])
             q = model.from_steps((20000, p1, 0))
             self.assertAlmostEqual(q[0], sign * 90, delta=0.08)
-            self.assertAlmostEqual(q[0] + q[1], -sign * 30, delta=0.08)
-            self.assertAlmostEqual(q[1], -sign * 120, delta=0.08)
-            held = model.from_steps((20000, p1, round(sign * 120 * model.factors[2])))
+            self.assertAlmostEqual(q[1], -sign * 30, delta=0.08)
+            self.assertAlmostEqual(q[0] + q[1], sign * 60, delta=0.08)
+            held = model.from_steps((20000, p1, round(sign * 30 * model.factors[2])))
             self.assertAlmostEqual(
                 held[1], 0, delta=0.08
             )  # hold relative elbow during J1 calibration
-            heading_fixed = model.from_steps(
-                (20000, p1, round(sign * 30 * model.factors[2]))
-            )
-            self.assertAlmostEqual(heading_fixed[0] + heading_fixed[1], 0, delta=0.08)
             self.assertAlmostEqual(
-                abs(sign * 120 * model.factors[2] / p1), 4, delta=0.01
+                abs(sign * 30 * model.factors[2] / p1), 0.5, delta=0.01
             )
         # Migration preserves the separately confirmed direction signs.
         legacy = asdict(NCConfig())
         legacy["coupling"] = 0.666667
         revised = upgrade_r5(legacy)
-        self.assertEqual(revised["coupling"], 1.333333)
+        self.assertEqual(revised["coupling"], 0.333333)
         for key in legacy:
             if key != "coupling":
                 self.assertEqual(revised[key], legacy[key])
@@ -357,13 +353,49 @@ class NCModelTests(unittest.TestCase):
             replace(NCConfig(), park_deg=(0, 0)),
             replace(NCConfig(), microsteps=(16, 3, 8)),
             replace(NCConfig(), arm_home_pps=0),
-            replace(NCConfig(), ratios=(1, 100)),
+            replace(NCConfig(), coupling=2.0, ratios=(1, 100)),
         ):
             with self.assertRaises(ValueError):
                 config.validate()
         commands = NCConfig().commands(7)
-        self.assertIn("GEOM 7 1333333 1638400 13653 40960 16 8 8", commands)
+        self.assertIn("GEOM 7 333333 1638400 27307 40960 16 16 8", commands)
         self.assertEqual(commands[1], "SPAN 7 -90000 90000 -90000 90000 0")
+
+    def test_stage1_span_md_telemetry_and_fast_z_move(self):
+        cfg = replace(NCConfig(), max_z_speed_mm_s=3.0).validate()
+        status = replace(
+            fixture(),
+            span_md=(177500, 177600),
+            beta_measured=524288,
+            comp_pulses=(6, 10),
+        )
+        model = cfg.model(status)
+        self.assertEqual(model.joint_limits_deg, ((-88.0, 85.5), (-88.0, 85.6)))
+        q = list(model.from_steps((35200, 0, 1800)))
+        q[2] -= 10
+        plan = model.plan((35200, 0, 1800), model.fk(q), 10)
+        self.assertEqual(plan.rate, 4800)
+        fast_z_status = replace(
+            status,
+            busy=1,
+            referenced=1,
+            stage=8,
+            mode=1,
+            pps=4800,
+            direction=(-1, 0, 0),
+        )
+        data = asdict(fast_z_status)
+        data.update(type="status", protocol=5, fw="SCARA_CARTESIAN_NC_V5")
+        for k, v in list(data.items()):
+            if isinstance(v, tuple):
+                data[k] = list(v)
+        parsed = parse_message(json.dumps(data))
+        self.assertIsInstance(parsed, NCStatus)
+        self.assertEqual(parsed.span_md, (177500, 177600))
+        self.assertEqual(parsed.comp_pulses, (6, 10))
+        self.assertEqual(parsed.beta_measured, 524288)
+        data["direction"] = [-1, 1, 0]
+        self.assertIsNone(parse_message(json.dumps(data)))
 
     def test_z_one_mm_s_and_config_upgrade(self):
         config = NCConfig().validate()
@@ -374,7 +406,7 @@ class NCModelTests(unittest.TestCase):
         self.assertEqual(plan.rate, 1600)
         self.assertEqual(plan.steps[1:], (0, 1800))
         self.assertIn(
-            "TUNE 7 200 4800 40000 300000 512 1024 400 800 200", config.commands(7)
+            "TUNE 7 200 3200 40000 300000 512 1024 400 800 200", config.commands(7)
         )
         old = asdict(config)
         old.pop("z_latch_pps")
@@ -405,8 +437,8 @@ class NCModelTests(unittest.TestCase):
             loaded = NCConfig.load(path)
             self.assertTrue(loaded.home_in_background)
             self.assertEqual(
-                loaded.z_home_pps, 4800
-            )  # old PPS replaced by the requested 3mm/s home setting
+                loaded.z_home_pps, 3200
+            )  # old PPS replaced by the requested 2mm/s home setting
         with self.assertRaises(ValueError):
             replace(config, z_latch_pps=5000).validate()
 

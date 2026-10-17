@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-09",
+  "backup": ".cleanup_backup/matlab_before_firmware_alignment.zip",
+  "backup_sha256": "F1F52E44D43E166767EE4C1DC66E44D356AD03604A0269B1026C339C6143BA1A",
+  "removed": [
+    {
+      "path": "Simulation\\slprj",
+      "files": 5,
+      "bytes": 379867.0
+    },
+    {
+      "path": "Simulation\\matlab\\slprj",
+      "files": 5,
+      "bytes": 36129.0
+    },
+    {
+      "path": "Simulation\\matlab\\src\\control",
+      "files": 1,
+      "bytes": 694.0
+    },
+    {
+      "path": "Simulation\\matlab\\src\\dynamics",
+      "files": 2,
+      "bytes": 1211.0
+    },
+    {
+      "path": "Simulation\\matlab\\src\\simulation\\scara_simulate.m",
+      "files": 1,
+      "bytes": 717.0
+    },
+    {
+      "path": "Simulation\\matlab\\src\\trajectory\\scara_bk_path.m",
+      "files": 1,
+      "bytes": 2299.0
+    },
+    {
+      "path": "Simulation\\matlab\\examples",
+      "files": 2,
+      "bytes": 3447.0
+    },
+    {
+      "path": "Simulation\\matlab\\tests\\validate_bk.m",
+      "files": 1,
+      "bytes": 2634.0
+    },
+    {
+      "path": "Simulation\\matlab\\tests\\validate_webots_interop.m",
+      "files": 1,
+      "bytes": 1409.0
+    },
+    {
+      "path": "Simulation\\matlab\\simulink\\models\\scara_brush.slx",
+      "files": 1,
+      "bytes": 74098.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\cache",
+      "files": 16,
+      "bytes": 532638.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\codegen",
+      "files": 0,
+      "bytes": null
+    },
+    {
+      "path": "Simulation\\matlab\\output\\data\\matlab",
+      "files": 5,
+      "bytes": 9199114.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\data\\simulink",
+      "files": 4,
+      "bytes": 10910164.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\logs",
+      "files": 8,
+      "bytes": 3123.0
+    },
+    {
+      "path": "Simulation\\matlab\\data",
+      "files": 2,
+      "bytes": 4023575.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\matlab_environment.log",
+      "files": 1,
+      "bytes": 169.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\matlab_environment_retry.log",
+      "files": 1,
+      "bytes": 217.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\build.log",
+      "files": 1,
+      "bytes": 226.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\validation\\bk_validation.json",
+      "files": 1,
+      "bytes": 309.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\figures\\app_ui.png",
+      "files": 1,
+      "bytes": 232211.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\figures\\arm_detail.png",
+      "files": 1,
+      "bytes": 244987.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\figures\\bk_drawing.png",
+      "files": 1,
+      "bytes": 62943.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\figures\\bk_tracking.png",
+      "files": 1,
+      "bytes": 139892.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\figures\\controller_comparison.png",
+      "files": 1,
+      "bytes": 69873.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\figures\\scara_3d.png",
+      "files": 1,
+      "bytes": 183919.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\figures\\stl_pivot_inspection.png",
+      "files": 1,
+      "bytes": 442332.0
+    }
+  ],
+  "removed_files": 66.0,
+  "removed_bytes": 26548197.0,
+  "kept_model": "Simulation/matlab/simulink/models/scara_stepper.slx",
+  "note": "Webots/common physical configuration and recorded real robot logs preserved",
+  "final_generated_removed": [
+    {
+      "path": "Simulation\\matlab\\output\\cache",
+      "files": 4,
+      "bytes": 9195.0
+    },
+    {
+      "path": "Simulation\\matlab\\output\\codegen",
+      "files": 0,
+      "bytes": null
+    },
+    {
+      "path": "Simulation\\matlab\\output\\preview.log",
+      "files": 1,
+      "bytes": 32.0
+    },
+    {
+      "path": "Software\\src\\__pycache__",
+      "files": 8,
+      "bytes": 118007.0
+    }
+  ]
+}

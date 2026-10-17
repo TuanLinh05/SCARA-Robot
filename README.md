@@ -108,8 +108,8 @@ that draws shapes and text on paper.
 - Deli EG118 pen holder: OpenSCAD + Python source and ready-to-print STL files.
 
 <div align="center">
-<img src="Simulation/matlab/output/figures/bk_drawing.png" alt="Simulated drawing of the letters BK" width="720">
-<br><sub>Simulated 70 × 70 mm "BK": three continuous strokes, pen lifted between strokes.</sub>
+<img src="Simulation/matlab/output/figures/tracking.png" alt="Simulated trajectory tracking of the SCARA drawing robot" width="720">
+<br><sub>Simulated trajectory tracking and pulse-level kinematics replay on the 100 × 100 mm drawing workspace.</sub>
 </div>
 
 ## System architecture
@@ -244,7 +244,7 @@ MATLAB does not need the Robotics System Toolbox or Simscape Multibody.
 Simulink is only needed to open the `.slx` model.
 
 <div align="center">
-<img src="Simulation/matlab/output/figures/scara_3d.png" alt="3D X-SCARA model drawing a flower on 100 × 100 mm paper" height="360">
+<img src="Simulation/matlab/output/figures/assembly.png" alt="3D X-SCARA assembly model on 100 × 100 mm paper" height="360">
 &nbsp;
 <img src="Simulation/matlab/output/figures/app_ui.png" alt="MATLAB simulation app" height="360">
 </div>
@@ -267,17 +267,13 @@ python -m unittest discover -s Simulation/webots/tests -v
 The firmware host tests need GCC (for example MSYS2 UCRT64). For MATLAB, run
 the scripts in `Simulation/matlab/tests/`.
 
-## Known limitations
+## Known limitations & recent upgrades
 
-Analysis of logs from the real hardware (6 homing runs, 58 strokes) shows:
+Analysis of logs from the real hardware (6 homing runs, 58 strokes) identified several root causes, which have now been addressed in source:
 
-- The firmware assumes the two switches of each joint are exactly 180° apart.
-  The measured span is about **177.5°**, so the angle scale is off by about 1.4%.
-  The pen tip lands 0.8-6 mm off and circles distort by 0.2-0.9 mm.
-- The elbow coupling ratio `k` is re-measured from about 64 steps at every
-  homing run, so it varies by ±1.6%. The mechanical value is **1/3**.
-- Visibly kinked or curved straight lines are usually caused by backlash (belts,
-  pen holder), not by the firmware.
+- **Kinematic calibration & coupling**: Firmware and GUI now support nominal pulley factors (`factors = 24.0, 24.0 steps/deg` from `16×` microstepping and `20T:54T` belt reduction), locked mechanical coupling (`β = 1/3`, `k = 0.5`), and center-latch homing without needing full ±limit sweeps.
+- **Performance & streaming**: Firmware math uses single-precision `float` on Cortex-M3 (`sinf`/`cosf`/`atan2f`/`sqrtf`), a 256-byte non-dropping UART RX ring buffer, credit-based pipelined `SEG` streaming (up to 8 in-flight segments), and background trajectory planning with SVG/DXF/G-code import and 2-opt TSP stroke ordering.
+- **Mechanical backlash**: Visibly kinked or curved straight lines on physical hardware are mainly caused by belt/pen-holder backlash (no closed-loop encoder).
 
 Full analysis and proposed fixes (Vietnamese):
 [`Doc/Danh_gia_Firmware_SCARA.md`](Doc/Danh_gia_Firmware_SCARA.md).
@@ -391,8 +387,8 @@ hình và chữ lên giấy.
 - Giá kẹp bút Deli EG118: mã nguồn OpenSCAD + Python, STL sẵn để in.
 
 <div align="center">
-<img src="Simulation/matlab/output/figures/bk_drawing.png" alt="Mô phỏng vẽ chữ BK" width="720">
-<br><sub>Mô phỏng vẽ chữ BK 70 × 70 mm: ba nét liên tục, nhấc bút khi đổi nét.</sub>
+<img src="Simulation/matlab/output/figures/tracking.png" alt="Mô phỏng bám quỹ đạo của robot vẽ SCARA" width="720">
+<br><sub>Mô phỏng bám quỹ đạo và tái hiện xung điều khiển trên vùng giấy vẽ 100 × 100 mm.</sub>
 </div>
 
 ## Kiến trúc hệ thống
@@ -525,7 +521,7 @@ MATLAB không cần Robotics System Toolbox hay Simscape Multibody. Simulink
 chỉ cần khi mở file `.slx`.
 
 <div align="center">
-<img src="Simulation/matlab/output/figures/scara_3d.png" alt="Mô hình 3D X-SCARA vẽ hình hoa trên giấy 100 × 100 mm" height="360">
+<img src="Simulation/matlab/output/figures/assembly.png" alt="Mô hình 3D lắp ráp X-SCARA trên giấy 100 × 100 mm" height="360">
 &nbsp;
 <img src="Simulation/matlab/output/figures/app_ui.png" alt="Giao diện mô phỏng MATLAB" height="360">
 </div>
@@ -548,16 +544,13 @@ python -m unittest discover -s Simulation/webots/tests -v
 Kiểm thử firmware trên máy tính cần GCC (ví dụ MSYS2 UCRT64). MATLAB:
 chạy các file trong `Simulation/matlab/tests/`.
 
-## Hạn chế đã biết
+## Hạn chế đã biết & các nâng cấp mới
 
-Phân tích log phần cứng thật (6 lần HOME, 58 nét vẽ) cho thấy:
+Phân tích log phần cứng thật (6 lần HOME, 58 nét vẽ) đã chỉ ra các nguyên nhân gây sai số và hiện đã được khắc phục trong mã nguồn:
 
-- Firmware giả định hai công tắc của mỗi khớp cách nhau đúng 180°, trong khi
-  đo thực tế khoảng **177,5°**. Thang góc vì vậy sai khoảng 1,4%: đầu bút
-  lệch 0,8-6 mm, đường tròn méo 0,2-0,9 mm.
-- Hệ số ghép khuỷu `k` được đo lại mỗi lần HOME từ khoảng 64 xung nên dao
-  động ±1,6%. Giá trị đúng theo cơ khí là **1/3**.
-- Nét thẳng bị gãy hoặc cong thấy rõ thường do độ rơ (đai, giá bút), không phải do firmware.
+- **Hiệu chuẩn động học & hệ số ghép đai**: Firmware và GUI đã hỗ trợ tỷ số truyền danh định theo cơ khí (`factors = 24.0, 24.0 xung/độ` từ vi bước `16×` và bộ truyền đai `20T:54T`), khóa cứng hệ số ghép cơ khí (`β = 1/3`, `k = 0.5`), và chế độ HOME chốt tâm không cần quét biên ±90°.
+- **Hiệu năng & truyền quỹ đạo**: Firmware dùng toán học dấu phẩy động đơn (`float`: `sinf`/`cosf`/`atan2f`/`sqrtf`) tối ưu cho Cortex-M3, bộ đệm vòng UART RX 256 byte chống rớt ký tự, cơ chế truyền đường chạy `SEG` theo cửa sổ tín dụng (credit-based pipelining 8 đoạn), lập quỹ đạo nền đa luồng, nhập file vector SVG/DXF/G-code và tối ưu thứ tự nét vẽ bằng thuật toán 2-opt TSP.
+- **Độ rơ cơ khí**: Nét thẳng trên phần cứng thực tế nếu còn gãy hoặc cong nhẹ chủ yếu do độ rơ cơ khí (dây đai, giá kẹp bút) vì hệ thống mở không có encoder phản hồi.
 
 Phân tích đầy đủ và hướng sửa: [`Doc/Danh_gia_Firmware_SCARA.md`](Doc/Danh_gia_Firmware_SCARA.md).
 

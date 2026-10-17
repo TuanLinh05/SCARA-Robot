@@ -1,23 +1,46 @@
-function out = scara_results(t,q,dq,ei,ref,p)
-% Shared postprocessing for native MATLAB and Simulink results.
-t=t(:);n=numel(t);xyz=zeros(n,3);force=zeros(n,1);tau=zeros(n,3);steps=zeros(n,3);
-% Fixed-step solvers may round the final timestamp a few ULPs past the stop time.
-queryTime=min(ref.t(end),max(ref.t(1),t));
-qr=interp1(ref.t,ref.q,queryTime);vr=interp1(ref.t,ref.dq,queryTime);ar=interp1(ref.t,ref.ddq,queryTime);
-for k=1:n
-    xyz(k,:)=scara_fk(q(k,:)',p)';
-    [~,~,~,force(k)]=scara_dynamics(q(k,:)',dq(k,:)',p);
-    ctrl=scara_controller([qr(k,:) vr(k,:) ar(k,:) q(k,:) dq(k,:) ei(k,:)]',p);
-    tau(k,:)=ctrl(1:3)'; [~,st]=scara_motor_coordinates(q(k,:)',p);steps(k,:)=st';
-end
-target=interp1(ref.t,ref.xyz,queryTime); err=vecnorm(xyz(:,1:2)-target(:,1:2),2,2);
-draw=force>0.01 & abs(xyz(:,1))<=p.paperHalfSize(1) & abs(xyz(:,2))<=p.paperHalfSize(2);
-width=(p.lineWidth0+p.lineWidthPerN*force)*1000; width(~draw)=0;
-out=struct('t',t,'q',q,'dq',dq,'integral',ei,'xyz',xyz,'target',target, ...
-    'force',force,'actuator',tau,'steps',steps,'draw',draw,'xyError',err,'lineWidthMm',width, ...
-    'rmsErrorMm',sqrt(mean(err.^2))*1000,'maxErrorMm',max(err)*1000, ...
-    'jointLimitViolation',any(q(:,1:2)<p.jointLimits(:,1)' | q(:,1:2)>p.jointLimits(:,2)','all'), ...
-    'zLimitViolation',any(q(:,3)<p.zLimits(1) | q(:,3)>p.zLimits(2)));
-assert(all(isfinite(q),'all'),'scara:unstable','Non-finite simulation state. Adjust solver or gains.');
-assert(all(isfinite([xyz tau target]),'all'),'scara:results','Non-finite simulation outputs.');
+function out = scara_results(t, q, xyz, steps, allowed, ref, p)
+%SCARA_RESULTS Package Simulink replay outputs and compute XY model tracking errors.
+%
+% [EN] Aligns simulated joint/Cartesian trajectories with the reference command
+%      timeline using zero-order-hold ('previous') interpolation, identifies when
+%      the brush tip touches the paper, and computes RMS and peak XY errors (in mm)
+%      across all pen-down samples.
+%
+% [VI] Dong goi ket qua mo phong Simulink va tinh sai so bam quy dao XY (theo mm).
+%      Dong bo duong cong mo phong voi quy dao tham chieu bang phep noi suy bac 0
+%      ('previous'), xac dinh trang thai cham giay va tinh sai so hieu dung (RMS)
+%      cung nhu sai so cuc dai (Max) trong suot qua trinh ha but ve.
+
+    % -------------------------------------------------------------------------
+    % Step 1: Store raw simulation time series
+    % Buoc 1: Luu tru cac chuoi thoi gian dau ra tu mo phong
+    % -------------------------------------------------------------------------
+    out.t = t;
+    out.q = q;
+    out.xyz = xyz;
+    out.steps = steps;
+    out.allowed = logical(allowed);
+
+    % -------------------------------------------------------------------------
+    % Step 2: Sample reference XYZ and pen state at simulation timestamps `t`
+    % Buoc 2: Noi suy vi tri tham chieu XYZ va trang thai but tai cac moc `t`
+    % -------------------------------------------------------------------------
+    out.reference = interp1(ref.t, ref.xyz, t, 'previous', 'extrap');
+    out.pen = logical(interp1(ref.t, double(ref.pen), t, 'previous', 'extrap'));
+
+    % [EN] Brush draws on paper when pen-down is requested AND Z is within 0.2 mm of paperZ.
+    % [VI] But thuc su ve len giay khi co lenh ha but VA do cao Z cach mat giay < 0.2 mm.
+    out.draw = out.pen & abs(xyz(:, 3) - p.paperZ) < 0.0002;
+
+    % -------------------------------------------------------------------------
+    % Step 3: Compute Euclidean XY tracking error (m) and pen-down statistics (mm)
+    % Buoc 3: Tinh sai so khoang cach XY (m) va thong ke RMS / Max khi ha but (mm)
+    % -------------------------------------------------------------------------
+    out.xyError = vecnorm(xyz(:, 1:2) - out.reference(:, 1:2), 2, 2);
+
+    ink = out.pen;
+    out.rmsErrorMm = sqrt(mean(out.xyError(ink).^2)) * 1000;
+    out.maxErrorMm = max(out.xyError(ink)) * 1000;
+
+    out.note = 'Model error only. No encoder, identified backlash, missed steps or measured pen force.';
 end

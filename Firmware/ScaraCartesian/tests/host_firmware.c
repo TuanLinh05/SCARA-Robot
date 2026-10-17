@@ -26,7 +26,7 @@ static bool mechanical;
 static int32_t physical_pos[3];
 static bool check_elbow_hold;
 static unsigned compensated_edges;
-static double physical_f1=40.0/3.0;
+static double physical_f1=80.0/3.0;
 static int noise_axis=-1;
 static uint64_t noise_until;
 static void mechanics_levels(void);
@@ -58,7 +58,7 @@ int gpio_pin_set_dt(const struct gpio_dt_spec *p, int value)
                 if(check_elbow_hold && control.stage==HS_J1) {
                     assert(levels[pad_index(motors[CT_J1].d.port,motors[CT_J1].d.pin)] !=
                            levels[pad_index(motors[CT_J2].d.port,motors[CT_J2].d.pin)]);
-                    double elbow=physical_pos[2]/40.0-(4.0/3.0)*physical_pos[1]/physical_f1;
+                    double elbow=physical_pos[2]/40.0-(1.0/3.0)*physical_pos[1]/physical_f1;
                     assert(fabs(elbow)<1.0); compensated_edges++;
                 }
             }
@@ -104,7 +104,7 @@ static void clear_report(void) { report_used = 0; report[0] = 0; }
 static void mechanics_levels(void)
 {
     double a=physical_pos[1]/physical_f1;
-    double b=physical_pos[2]/40.0-(4.0/3.0)*a;
+    double b=physical_pos[2]/40.0-(1.0/3.0)*a;
     double x[3]={physical_pos[0],a,b};
     for(unsigned i=0;i<3;i++) {
         bool plus=x[i]>=(i ? 90 : 40000), minus=x[i]<=(i ? -90 : 0);
@@ -126,9 +126,9 @@ static void setup(void)
     motor_error = timer_errno = 0; timer_running = usb_configured = counter_on = inject_late = mechanical = false;
     high_mask = usb_epoch = pulse_start_cycles = low_us = timer_late = gpio_delay = 0; clear_report();
     noise_axis=-1; noise_until=0;
-    physical_pos[0]=16000; physical_pos[1]=267; physical_pos[2]=667;
+    physical_pos[0]=16000; physical_pos[1]=533; physical_pos[2]=867;
     check_elbow_hold=false; compensated_edges=0;
-    physical_f1=40.0/3.0;
+    physical_f1=80.0/3.0;
     received_bytes=NULL; received_size=received_index=0;
     for (int i = 0; i < 4; i++) mock_devices[i].id = i;
     booting = true; if (!setjmp(boot_exit)) firmware_main(); booting = false;
@@ -167,9 +167,10 @@ static void referenced_fixture(void)
 {
     setup(); control.referenced = true; control.stage = HS_READY; control.reference_epoch = 1;
     control.pos[0] = 20000; control.pos[2] = 1800;
-    control.range[0] = 40000; control.range[1] = 2400; control.range[2] = 7200;
-    control.factor[0] = 1638400; control.factor[1] = 13653; control.factor[2] = 40960;
-    control.beta = 4 * CT_Q; clear_report();
+    control.range[0] = 40000; control.range[1] = 4800; control.range[2] = 7200;
+    control.factor[0] = 1638400; control.factor[1] = 27307; control.factor[2] = 40960;
+    control.coupling_ppm = 333333;
+    control.beta = 524281; clear_report();
 }
 static void advance(unsigned ms, bool keep)
 {
@@ -199,7 +200,7 @@ static void advance(unsigned ms, bool keep)
 static void configure_home(void)
 {
     sample(); clock_us+=21000; sample();
-    command("GEOM 7 1333333 1638400 13653 40960 16 8 8");
+    command("GEOM 7 333333 1638400 27307 40960 16 16 8");
     command("SPAN 7 -90000 90000 -90000 90000 0");
     command("PARK 7 0 45000 3000");
     command("TUNE 7 400 800 40000 100000 512 1024");
@@ -355,7 +356,7 @@ int main(int argc, char **argv)
     /* Full startup -> configuration -> mechanical HOME -> final HIGH drain.
      * Uses the real timer ISR, worker service and six GPIO input mappings. */
     /* Reproduce the previous sign error against the physical DIR-based model. */
-    setup(); mechanical=true; configure_home(); command("POL 7 J2 1"); command("COUPLE 7 0 64"); command("INIT 7 1");
+    setup(); mechanical=true; physical_pos[1]=1600; configure_home(); command("POL 7 J2 1"); command("COUPLE 7 0 64"); command("INIT 7 1");
     for(unsigned n=0;n<18000 && ct_busy(&control);n++) advance(100,true);
     assert(!control.referenced && !counter_on && !high_mask && !strcmp(control.reason,"j2_guard"));
     /* With automatic measurement the same wrong polarity is rejected BEFORE
@@ -365,14 +366,19 @@ int main(int argc, char **argv)
     assert(!control.referenced && !counter_on && !strcmp(control.reason,"coupling_sign"));
     assert(control.beta<0 && control.probe_da && control.probe_db && rises[1]<=128);
     assert(control.cal[1].phase==HMC_IDLE);
-    for(unsigned scale=2;scale<=3;scale++) {
-    setup(); mechanical=true; physical_f1=(40.0/3.0)*scale; physical_pos[1]=(int32_t)lround(20*physical_f1);
+    /* Wrong J1 DIP switch (e.g. x8 vs configured x16) is rejected at HS_COUPLE_SCAN. */
+    setup(); mechanical=true; physical_f1=40.0/3.0; physical_pos[1]=(int32_t)lround(20*physical_f1);
+    configure_home(); command("INIT 7 1");
+    for(unsigned n=0;n<18000 && ct_busy(&control);n++) advance(100,true);
+    assert(!control.referenced && !counter_on && !strcmp(control.reason,"coupling_mismatch"));
+    /* Matched J1 DIP switch (x16, 80/3 pulses/deg) succeeds with exact nominal factor and coupling. */
+    setup(); mechanical=true; physical_f1=80.0/3.0; physical_pos[1]=(int32_t)lround(20*physical_f1);
     check_elbow_hold=true; configure_home(); command("INIT 7 1");
     for(unsigned n=0;n<18000 && ct_busy(&control);n++) advance(100,true);
     assert(control.referenced && control.coupling_ready && compensated_edges>1000);
-    assert(llabs(control.beta-4*CT_Q/scale)<CT_Q/50 && abs((int)control.range[1]-(int)(2400*scale))<=3);
-    assert(abs(control.coupling_ppm-1333333)<10000);
-    }
+    assert(control.factor[1]==27307 && control.factor[2]==40960);
+    assert(control.beta==524281 && abs((int)control.range[1]-4800)<=3);
+    assert(control.coupling_ppm==333333 && abs(control.span_md[0]-180000)<=100);
     for(unsigned noisy=0;noisy<3;noisy++) {
     setup(); mechanical=true; check_elbow_hold=true; configure_home();
     command("INIT 7 1");
@@ -393,20 +399,20 @@ int main(int argc, char **argv)
     for(unsigned n=0;n<18000 && ct_busy(&control);n++) advance(100,true);
     if(!control.referenced) fprintf(stderr,"IO init failed %s phase=%u error=%u timer=%d\n",control.reason,control.cal[control.selected].phase,control.cal[control.selected].error,timer_errno);
     assert(control.referenced && !counter_on && !high_mask && control.stage==HS_READY);
-    assert(abs((int)control.range[1]-2400)<=3 && abs((int)control.range[2]-7200)<=4);
+    assert(abs((int)control.range[1]-4800)<=3 && abs((int)control.range[2]-7200)<=4);
     assert(control.range[0]==40000 && abs(control.pos[0]+16000-35200)<=2);
     assert(compensated_edges>1000);
-    const int32_t initial[3]={16000,267,667};
+    const int32_t initial[3]={16000,533,867};
     for(unsigned a=0;a<3;a++) assert(physical_pos[a]==control.pos[a]+initial[a]);
-    assert(fabs(physical_pos[1]/(40.0/3.0))<.2);
-    assert(fabs(physical_pos[2]/40.0-(4.0/3.0)*physical_pos[1]/(40.0/3.0)-45)<.2);
+    assert(fabs(physical_pos[1]/(80.0/3.0))<.2);
+    assert(fabs(physical_pos[2]/40.0-(1.0/3.0)*physical_pos[1]/(80.0/3.0)-45)<.2);
     /* XYZ must use the same motor normalization after measured home. */
     /* MOVE contains displacement from the measured origin, not raw counters. */
-    command("MOVE 7 2 20000 400 2800 800"); assert(control.running);
+    command("MOVE 7 2 20000 800 1600 800"); assert(control.running);
     for(unsigned n=0;n<10000 && ct_busy(&control);n++) advance(100,true);
     assert(control.referenced && !counter_on && !high_mask);
     for(unsigned a=0;a<3;a++) assert(physical_pos[a]==control.pos[a]+initial[a]);
-    double shoulder=physical_pos[1]/(40.0/3.0), elbow=physical_pos[2]/40.0-(4.0/3.0)*shoulder;
+    double shoulder=physical_pos[1]/(80.0/3.0), elbow=physical_pos[2]/40.0-(1.0/3.0)*shoulder;
     if(fabs(shoulder-30)>=.2 || fabs(elbow-30)>=.2 || physical_pos[0]!=20000)
         fprintf(stderr,"physical XYZ q1=%.5f q2=%.5f z=%d origin=[%d,%d,%d]\n",
             shoulder,elbow,physical_pos[0],control.origin[0],control.origin[1],control.origin[2]);
@@ -421,7 +427,9 @@ int main(int argc, char **argv)
     control.input_bits=63; control.input_at_ms=UINT32_MAX; control.reason="calibration_failed";
     control.idle_ignored=UINT32_MAX;
     control.path_total=control.path_received=control.path_done=500; control.path_starved=UINT32_MAX;
-    control.probe_da=-256; control.probe_db=-16384; control.beta=64*CT_Q;
+    control.probe_da=-256; control.probe_db=-16384; control.beta=64*CT_Q; control.beta_measured=-64*CT_Q;
+    control.span_md[0]=control.span_md[1]=360000;
+    control.comp_total[1]=control.comp_total[2]=UINT32_MAX;
     control.direction[0]=control.direction[1]=control.direction[2]=-1;
     for(unsigned a=0;a<3;a++) {
         control.pos[a]=control.goal[a]=CT_MAX_POS; control.origin[a]=-CT_MAX_POS;
@@ -437,6 +445,3 @@ int main(int argc, char **argv)
     puts("actual firmware ISR: GPIO counts/widths, late timer recovery, three-axis STOP, ENA, readback faults, switch guard, USB, lease, timestamp wrap passed");
     return 0;
 }
-
-
-

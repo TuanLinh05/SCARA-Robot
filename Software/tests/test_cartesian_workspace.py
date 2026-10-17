@@ -34,6 +34,20 @@ class WorkspaceTests(unittest.TestCase):
                 for a, b in zip(view.world(*view.point(*p)), p):
                     self.assertAlmostEqual(a, b)
 
+    def test_viewport_zoom_and_pan_preserve_cursor_focus_and_roundtrip(self):
+        view = Viewport(800, 600, 196)
+        cursor = (260.0, 180.0)
+        before_world = view.world(*cursor)
+        zoomed = view.zoomed(1.5, *cursor)
+        after_world = zoomed.world(*cursor)
+        self.assertAlmostEqual(before_world[0], after_world[0], places=6)
+        self.assertAlmostEqual(before_world[1], after_world[1], places=6)
+        panned = zoomed.panned(45.0, -30.0)
+        for pt in ((-80.0, 120.0), (0.0, 0.0), (50.0, -40.0)):
+            wx, wy = panned.world(*panned.point(*pt))
+            self.assertAlmostEqual(wx, pt[0], places=6)
+            self.assertAlmostEqual(wy, pt[1], places=6)
+
     def test_interactive_step_is_bounded_and_converges(self):
         q = (0, 45, 10)
         target = (-60, 70, 20)

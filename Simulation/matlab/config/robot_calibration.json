@@ -1,0 +1,177 @@
+{
+  "firmware": "SCARA_CART_NC_HOME_V5_R9",
+  "gui": "SCARA_GUI_V5_R13 (recorded log)",
+  "source_log": "cartesian_20261008_104801_16264_86b4eff2.jsonl",
+  "config": {
+    "l1_mm": 98.0,
+    "l2_mm": 98.0,
+    "tool_offset_mm": [
+      0.0,
+      0.0
+    ],
+    "lead_mm_rev": 2.0,
+    "z_span_mm": 0.0,
+    "joint_limits_deg": [
+      [
+        -90.0,
+        90.0
+      ],
+      [
+        -90.0,
+        90.0
+      ]
+    ],
+    "park_deg": [
+      0.0,
+      45.0
+    ],
+    "z_clear_mm": 3.0,
+    "microsteps": [
+      16,
+      8,
+      8
+    ],
+    "ratios": [
+      3.0,
+      9.0
+    ],
+    "positive_high": [
+      true,
+      true,
+      false
+    ],
+    "coupling": 1.333333,
+    "auto_coupling": true,
+    "coupling_probe_pulses": 128,
+    "arm_home_pps": 200,
+    "j2_home_pps": 800,
+    "j2_latch_pps": 200,
+    "z_home_speed_mm_s": 3.0,
+    "z_latch_pps": 400,
+    "home_in_background": true,
+    "motion_in_background": true,
+    "arm_scan_pulses": 40000,
+    "z_scan_pulses": 300000,
+    "arm_backoff_pulses": 512,
+    "z_backoff_pulses": 1024,
+    "max_master_rate": 1600,
+    "max_joint_speed_deg_s": [
+      15.0,
+      10.0
+    ],
+    "max_z_speed_mm_s": 1.0
+  },
+  "calibration": {
+    "epoch": 1,
+    "factors_pp_unit": [
+      1600.0,
+      26.2939453125,
+      39.41015625
+    ],
+    "range": [
+      87277,
+      4733,
+      7094
+    ],
+    "n1": [
+      87280,
+      4733,
+      7094
+    ],
+    "n2": [
+      87273,
+      4732,
+      7093
+    ],
+    "coupling": 0.338806,
+    "beta": 0.5078125,
+    "probe_da": 128,
+    "probe_db": 65,
+    "timer_late": 266
+  },
+  "assumptions": [
+    "L1/L2=98 mm; tool offset unknown, initially zero",
+    "Joint switch spans assumed 180 degrees; Z lead assumed 2 mm/revolution",
+    "No encoder: counts confirm commanded edges, not physical travel"
+  ],
+  "drawing_settings": {
+    "HEART": {
+      "size_mm": 46.32,
+      "center_x": 0.0,
+      "center_y": 165.0,
+      "paper_z": 20.0,
+      "lift_mm": 2.0,
+      "draw_speed": 12.0,
+      "travel_speed": 12.0,
+      "step_mm": 0.75,
+      "tolerance_mm": 0.25,
+      "pattern": "HEART",
+      "settle_s": 0.12
+    },
+    "CIRCLE": {
+      "size_mm": 46.09,
+      "center_x": 0.0,
+      "center_y": 165.0,
+      "paper_z": 20.0,
+      "lift_mm": 2.0,
+      "draw_speed": 12.0,
+      "travel_speed": 12.0,
+      "step_mm": 0.75,
+      "tolerance_mm": 0.25,
+      "pattern": "CIRCLE",
+      "settle_s": 0.12
+    },
+    "BK": {
+      "size_mm": 46.09,
+      "center_x": 0.0,
+      "center_y": 165.0,
+      "paper_z": 20.0,
+      "lift_mm": 2.0,
+      "draw_speed": 12.0,
+      "travel_speed": 12.0,
+      "step_mm": 0.75,
+      "tolerance_mm": 0.25,
+      "pattern": "BK",
+      "settle_s": 0.12
+    },
+    "LINH": {
+      "size_mm": 46.09,
+      "center_x": 0.0,
+      "center_y": 165.0,
+      "paper_z": 20.0,
+      "lift_mm": 2.0,
+      "draw_speed": 12.0,
+      "travel_speed": 12.0,
+      "step_mm": 0.75,
+      "tolerance_mm": 0.25,
+      "pattern": "LINH",
+      "settle_s": 0.12
+    },
+    "STAR": {
+      "size_mm": 46.09,
+      "center_x": 0.0,
+      "center_y": 165.0,
+      "paper_z": 20.0,
+      "lift_mm": 2.0,
+      "draw_speed": 12.0,
+      "travel_speed": 12.0,
+      "step_mm": 0.75,
+      "tolerance_mm": 0.25,
+      "pattern": "STAR",
+      "settle_s": 0.12
+    },
+    "FLOWER": {
+      "size_mm": 41.07,
+      "center_x": 0.0,
+      "center_y": 165.0,
+      "paper_z": 20.0,
+      "lift_mm": 2.0,
+      "draw_speed": 12.0,
+      "travel_speed": 12.0,
+      "step_mm": 0.75,
+      "tolerance_mm": 0.25,
+      "pattern": "FLOWER",
+      "settle_s": 0.12
+    }
+  }
+}

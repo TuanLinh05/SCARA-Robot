@@ -20,7 +20,7 @@
   "z_clear_mm": 3.0,
   "microsteps": [
     16,
-    8,
+    16,
     8
   ],
   "ratios": [
@@ -32,7 +32,7 @@
     true,
     false
   ],
-  "coupling": 1.333333,
+  "coupling": 0.333333,
   "arm_home_pps": 200,
   "j2_home_pps": 800,
   "j2_latch_pps": 200,
@@ -51,7 +51,7 @@
   "auto_coupling": true,
   "coupling_probe_pulses": 128,
   "motion_in_background": true,
-  "z_home_speed_mm_s": 3.0,
+  "z_home_speed_mm_s": 2.0,
   "tool_offset_mm": [
     0,
     0

@@ -1,41 +1,79 @@
 {
-  "kinematicsCases": 100,
-  "jacobianCases": 100,
-  "massMatrixCases": 100,
-  "coriolisEnergyCases": 100,
-  "stlInstances": 11,
-  "dynamicsParameters": "estimates",
-  "paths": [
+  "passed": true,
+  "matlab": "26.1.0.3251617 (R2026a) Update 2",
+  "firmware": "SCARA_CART_NC_HOME_V5_R9",
+  "sourceLog": "cartesian_20261008_104801_16264_86b4eff2.jsonl",
+  "standardBlocks": 184,
+  "customFunctionBlocks": 0,
+  "fkIkCases": 100,
+  "runs": [
     {
-      "name": "circle",
-      "rmsErrorMm": 8.8278314581151517E-5,
-      "maxErrorMm": 0.000482514241381097,
-      "maximumNormalForceN": 0.48015229681496696
+      "pattern": "flower",
+      "samples": 61128,
+      "seconds": 122.254,
+      "maxFkDifferenceM": 6.245004513516506E-17,
+      "modelRmsMm": 0.046697771974201364,
+      "modelMaxMm": 0.14138931725366238
     },
     {
-      "name": "flower",
-      "rmsErrorMm": 0.00014980836992426377,
-      "maxErrorMm": 0.00047915430653532233,
-      "maximumNormalForceN": 0.48015229681496696
+      "pattern": "circle",
+      "samples": 30759,
+      "seconds": 61.516,
+      "maxFkDifferenceM": 6.245004513516506E-17,
+      "modelRmsMm": 0.04990882668042068,
+      "modelMaxMm": 0.1545973583281043
     },
     {
-      "name": "square",
-      "rmsErrorMm": 9.365824249096618E-5,
-      "maxErrorMm": 0.0006156281155518487,
-      "maximumNormalForceN": 0.48015229681496696
+      "pattern": "square",
+      "samples": 27873,
+      "seconds": 55.744,
+      "maxFkDifferenceM": 5.551115123125783E-17,
+      "modelRmsMm": 0.04844470510796349,
+      "modelMaxMm": 0.14849307596059774
     },
     {
-      "name": "bk",
-      "rmsErrorMm": 0.00013836341092041753,
-      "maxErrorMm": 0.0011073146217339446,
-      "maximumNormalForceN": 0.48015233169204957
+      "pattern": "star",
+      "samples": 34678,
+      "seconds": 69.354,
+      "maxFkDifferenceM": 5.551115123125783E-17,
+      "modelRmsMm": 0.046881701877196126,
+      "modelMaxMm": 0.13309065200235037
     },
     {
-      "name": "D:\\HK261\\Robot\\HPMR\\Scara Robot\\Simulation\\common\\trajectories\\example_drawing.csv",
-      "rmsErrorMm": 0.0010115893907159806,
-      "maxErrorMm": 0.0046993650315073814,
-      "maximumNormalForceN": 0.48048297732988815
+      "pattern": "heart",
+      "samples": 33004,
+      "seconds": 66.006,
+      "maxFkDifferenceM": 5.551115123125783E-17,
+      "modelRmsMm": 0.05232481289979664,
+      "modelMaxMm": 0.14669912234746108
+    },
+    {
+      "pattern": "bk",
+      "samples": 50023,
+      "seconds": 100.044,
+      "maxFkDifferenceM": 6.938893903907228E-17,
+      "modelRmsMm": 0.0517841549420115,
+      "modelMaxMm": 0.14801564527944464
+    },
+    {
+      "pattern": "linh",
+      "samples": 55057,
+      "seconds": 110.11200000000001,
+      "maxFkDifferenceM": 5.551115123125783E-17,
+      "modelRmsMm": 0.04909776566610798,
+      "modelMaxMm": 0.13761400137205718
+    },
+    {
+      "pattern": "thoa",
+      "samples": 52396,
+      "seconds": 104.79,
+      "maxFkDifferenceM": 5.551115123125783E-17,
+      "modelRmsMm": 0.04797875537119219,
+      "modelMaxMm": 0.13700695994863285
     }
   ],
-  "simulinkTested": false
+  "watchdogStopSeconds": 1.35,
+  "scenarioDeltaMm": 0.6690792909115324,
+  "limitations": "No physical encoder/force/backlash measurements; home is real telemetry replay, not a contact dynamics model.",
+  "direct_slx_startup_and_legacy_workspace_passed": true
 }

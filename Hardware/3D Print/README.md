@@ -56,7 +56,6 @@ In **1** bản `Test_hardware_fit_1.0.4.stl` trước để kiểm tra độ kh�
 
 - [X-SCARA Frame README trên GitHub](https://github.com/madl3x/x-scara/blob/master/hardware/frame/README.md)
 - `../frame/BOM.md` và `../arm/BOM.md` trong workspace.
-- `../Hướng dẫn in test part và số lượng.docx` trong workspace.
 
 ## README theo từng folder
 

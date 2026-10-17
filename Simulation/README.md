@@ -1,88 +1,45 @@
-# Mô phỏng X-SCARA vẽ bằng bút lông
+# Mô phỏng SCARA
 
-Hai môi trường dùng chung hình học, tham số SI và CSV quỹ đạo. MATLAB/Simulink
-dùng mô hình giải tích để nghiên cứu thuật toán; Webots dùng vật lý vật rắn,
-tiếp xúc đầu bút và giấy, cùng thiết bị Pen để hiển thị nét.
+Hai môi trường phục vụ hai mục đích:
 
-## Tìm file nhanh
+- **MATLAB/Simulink hiện hành** bám robot stepper và firmware R9: số xung DDA, calib đo trong log, bù đai J1/J2, NC/watchdog và quỹ đạo của GUI. Giao diện STL và các kịch bản độ rơ/đáp ứng giúp nghiên cứu sai lệch nét vẽ.
+- **Webots** giữ mô hình vật lý nghiên cứu ban đầu: PID, ma sát, khối lượng, tiếp xúc bút/giấy là ước lượng. Chưa đồng bộ các giá trị calib R9; không dùng mặc định Webots thay số đo của robot thực.
 
-```text
-Simulation/
-├── common/
-│   ├── config/scara.json              Thông số robot/bút dùng chung
-│   ├── trajectories/                 CSV đường vẽ
-│   └── assets/                       Mesh theo khâu, giấy, nguồn/giấy phép
-├── matlab/
-│   ├── run_scara.m                    Mở giao diện MATLAB
-│   ├── startup_scara.m                Thêm đường dẫn + đặt cache
-│   ├── config/                       Đọc tham số chung
-│   ├── src/                          kinematics, dynamics, control,
-│   │                                 trajectory, simulation, io, visualization
-│   ├── simulink/models/              scara_brush.slx
-│   ├── examples/                     So sánh PID, đọc log Webots
-│   ├── tests/                        Kiểm chứng MATLAB/Simulink
-│   └── output/                       figures, data, logs, validation, cache
-└── webots/
-    ├── worlds/scara_draw.wbt          Mở file này trong Webots
-    ├── protos/                       Robot SCARA và mặt giấy
-    ├── controllers/scara_draw/       Entry point + core/ thuật toán
-    ├── config/demo.json              Chọn hình, chế độ điều khiển, màu mực
-    ├── tools/                        Tạo lại dự án, kiểm tra offline
-    ├── tests/                        Động học, điều khiển, cấu trúc, I/O
-    └── output/                       runs/<thời điểm>/, validation/
-```
+## MATLAB/Simulink
 
-## Chạy Webots
-
-1. Cài Webots và Python 3. Không cần NumPy hay ROS cho controller này.
-2. Mở [webots/worlds/scara_draw.wbt](webots/worlds/scara_draw.wbt) bằng **File → Open World**.
-3. Nhấn **Run**. Robot di chuyển đến điểm đầu, hạ bút, vẽ hoa rồi nhấc bút.
-4. Sửa [webots/config/demo.json](webots/config/demo.json), sau đó **Reset/Reload**
-   để thử `circle`, `square`, `csv` hoặc `control_mode: "pid"`.
-
-Xem [hướng dẫn Webots](webots/README.md) để chỉnh thuật toán, đọc log và debug.
-World/PROTO dùng header `R2025a`, bản ổn định chính thức được kiểm tra ở thời điểm
-tạo dự án. Không cần đổi header chỉ vì cài một bản mới hơn. Máy hiện chưa có
-Webots nên chưa xác nhận khởi chạy hoặc vật lý trên bản 2026 bạn định cài.
-
-## Chạy MATLAB/Simulink
-
-Trong MATLAB, chuyển Current Folder đến `Simulation/matlab` rồi chạy:
+Đặt Current Folder ở `Simulation/matlab`, chạy:
 
 ```matlab
 run_scara
 ```
 
-Hoặc `startup_scara; out=scara_simulink('flower');`. File SLX nằm trong
-`matlab/simulink/models/scara_brush.slx`, tự thêm đường dẫn khi mở/chạy trực tiếp.
-Xem [hướng dẫn MATLAB](matlab/README.md).
+Hoặc:
 
-## Các điểm cần biết trước khi dùng kết quả trong bài tập
+```matlab
+startup_scara;
+out=scara_simulink('flower');
+validate_scara;
+```
 
-- Hình dáng tay lấy từ 11 instance STL trong `Hardware/arm/STL`, gom thành
-  5 mesh có đơn vị mét. Chiều dài hai khâu mặc định 98 mm. Tầng lắp ráp Z,
-  thành bên, khung, motor, bút và giá kẹp còn là xấp xỉ.
-- Mô hình có hai khớp quay và trục Z nâng cả cụm tay. Webots có thêm khớp
-  đàn hồi thụ động ở đầu bút, GPS đầu bút, cảm biến lực và encoder.
-- Khối lượng, quán tính, ma sát, giới hạn khớp/lực và độ đàn hồi cần hiệu chỉnh
-  bằng đo đạc. STL chỉ cung cấp bề mặt; không tự chứa các thông số này.
-- Bút dùng tiếp xúc cầu nhỏ + lò xo để nghiên cứu lực tì. Nét Pen có độ rộng
-  cố định; chưa mô phỏng từng sợi bút, mực loang hoặc nét thư pháp.
-- Collision dùng hình đơn giản và `selfCollision FALSE`; chưa kiểm chứng tránh
-  va chạm chi tiết. Đai/crosstalk chỉ được quy đổi tọa độ A/B trong log, chưa
-  được mô phỏng như truyền động đàn hồi hay mô hình điện động cơ bước.
+Model duy nhất hiện hành: `matlab/simulink/models/scara_stepper.slx`, dùng khối Simulink chuẩn, không có MATLAB Function/S-Function tự viết. Tham số thực nghiệm ở `matlab/config/robot_calibration.json`; hướng dẫn và giới hạn tại [matlab/README.md](matlab/README.md).
 
-## Trạng thái kiểm chứng
+Góc q2 là góc tương đối giữa hai arm; B=q2+0.338806*q1 theo log đã calib. Z=0 tại công tắc dưới, +Z lên. L1=L2=98 mm và bước vít me 2 mm/vòng vẫn là giả định người dùng. Robot không có encoder, nên số xung không xác nhận vị trí vật lý hay độ chính xác nét trên giấy.
 
-MATLAB/Simulink đã chạy thực tế trên R2026a Update 2 sau khi sắp xếp lại thư mục.
-Kiểm thử Webots offline kiểm tra thuật toán, đối chiếu MATLAB, I/O controller,
-trường node theo nguồn R2025a, đường dẫn mesh và tính nhất quán khớp/quán tính.
-Kiểm thử mock không mô phỏng vật lý Webots. Kết quả nằm trong `output/validation`
-của từng môi trường; phần chạy Webots thật còn chờ cài phần mềm.
+## Webots
 
-Nguồn thiết kế: [madl3x/x-scara](https://github.com/madl3x/x-scara), GPL-3.0.
-Mesh chuyển đổi giữ manifest nguồn, mã băm và giấy phép trong `common/assets`.
-Tài liệu [Pen](https://cyberbotics.com/doc/reference/pen),
-[khớp](https://cyberbotics.com/doc/reference/jointparameters),
-[TouchSensor](https://cyberbotics.com/doc/reference/touchsensor) và
-[bản phát hành Webots](https://github.com/cyberbotics/webots/releases).
+1. Mở `webots/worlds/scara_draw.wbt` bằng Webots.
+2. Run để chạy demo.
+3. Sửa `webots/config/demo.json`, Reset/Reload để đổi hình hoặc chế độ điều khiển.
+
+Xem [webots/README.md](webots/README.md). `common/config/scara.json`, CSV và assets vẫn phục vụ mô hình Webots cũ. Không thay cấu hình vật lý của nó trong lần cập nhật MATLAB này. Fixture `webots/tests/fixtures/matlab_oracle.json` giữ bộ đối chiếu cũ; không tái sinh nó bằng planner R9 vì tham số/quy ước Z đã khác.
+
+## Cấu trúc
+
+```text
+Simulation/
+  matlab/       Một model stepper hiện hành, giao diện, source và tests
+  webots/       World/PROTO/controller vật lý nghiên cứu
+  common/       Cấu hình Webots, CSV và mesh/giấy phép dùng lại
+```
+
+STL nguồn trong `Hardware/arm/STL`, 11 instance ghép theo khâu. Khung, vị trí tầng lắp, motor và bút vẫn là xấp xỉ. Nguồn CAD: [madl3x/x-scara](https://github.com/madl3x/x-scara), GPL-3.0; manifest và giấy phép nằm trong `common/assets`.

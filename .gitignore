@@ -34,6 +34,8 @@ slprj/
 Simulation/matlab/output/cache/
 Simulation/matlab/output/codegen/
 Simulation/matlab/output/data/
+Simulation/matlab/output/reference/
+Simulation/matlab/output/*.log
 
 # Webots run output
 Simulation/webots/output/runs/

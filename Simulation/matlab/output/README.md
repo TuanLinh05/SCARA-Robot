@@ -1,14 +1,9 @@
-# Kết quả MATLAB/Simulink
+# Kết quả mô phỏng hiện tại
 
-- `figures/`: ảnh 3D, tracking, so sánh PID, sơ đồ Simulink.
-- `data/matlab/`: simulation.mat/csv và controller_comparison.mat.
-- `data/simulink/`: simulation.mat/csv chạy từ SLX.
-- `logs/`: log chạy MATLAB; log cũ trước sắp xếp được giữ để đối chiếu.
-- `validation/validation.json`: kiểm chứng đã chạy lại sau sắp xếp.
-- `data/matlab/bk/`, `data/simulink/bk/`: CSV/MAT riêng của hình BK.
-- `figures/bk_drawing.png`, `bk_tracking.png`: hình BK và đồ thị điều khiển.
-- `validation/bk_validation.json`: hình học, nhấc bút và so sánh MATLAB/Simulink BK.
-- `cache/`, `codegen/`: file tự sinh của Simulink, không thêm vào source path.
+- `validation/validation.json`: kiểm thử MATLAB/Simulink hiện hành.
+- `figures/`: sơ đồ khối, lắp ráp STL, quỹ đạo và telemetry HOME.
+- `data/`: CSV/MAT của lần chạy gần nhất; HOME CSV.
+- `reference/`: MAT nén chứa xung/đích do Python planner tạo, có thể xóa để tái sinh.
+- `cache/`, `codegen/`: Simulink tự sinh, không phải mã nguồn.
 
-MAT có thể giữ đường dẫn trong biến p từ thời điểm tạo. Hàm mới đọc đường dẫn
-theo vị trí project hiện tại; không dùng đường dẫn trong MAT cũ để tìm source.
+Lỗi XY là lỗi mô hình, không phải phép đo nét vẽ thực. Không có encoder/đo lực để xác nhận độ chính xác cơ khí. Các trường hợp backlash/lag là giả định có thể chỉnh.

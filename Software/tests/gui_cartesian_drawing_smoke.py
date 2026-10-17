@@ -93,7 +93,7 @@ try:
     app.start_bk()
     pump(0.1)
     assert len(moves()) == count and not app.bk_confirmed()
-    assert "3 mm/s" in app.home_hint.cget("text")
+    assert "2 mm/s" in app.home_hint.cget("text")
     # Fitting before paper confirmation must not move or invent a paper Z.
     sent = len(app.link.sent)
     epoch = app.state.epoch

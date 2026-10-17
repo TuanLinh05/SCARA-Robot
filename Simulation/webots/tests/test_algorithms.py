@@ -9,7 +9,7 @@ import unittest
 PROJECT = Path(__file__).resolve().parents[1]
 SIMULATION = PROJECT.parent
 sys.path.insert(0, str(PROJECT/'controllers/scara_draw'))
-from core.model import fk, ik, motor_coordinates
+from core.model import fk, ik, motor_coordinates, from_steps, quantize_stepper_pose, round_nearest
 from core.control import EffortPID, ink_allowed
 from core.trajectory import build_reference
 
@@ -83,6 +83,11 @@ class AlgorithmTests(unittest.TestCase):
         axes, steps = motor_coordinates([.6,1.2,.01],self.p)
         self.assertAlmostEqual(axes[1],1.4)
         self.assertEqual(steps[2],4000)
+        q_quant = from_steps(steps, self.p)
+        self.assertEqual(motor_coordinates(q_quant, self.p)[1], steps)
+        self.assertEqual(quantize_stepper_pose([.6, 1.2, .01], self.p), q_quant)
+        self.assertEqual(round_nearest(2.5), 3)
+        self.assertEqual(round_nearest(-2.5), -3)
 
 
 if __name__ == '__main__':

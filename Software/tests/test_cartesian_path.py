@@ -166,6 +166,31 @@ class PathTests(unittest.TestCase):
             expected = 2500 + 997500 * (6 * u**5 - 15 * u**4 + 10 * u**3)
             self.assertLess(abs(value - expected), 400)
 
+    def test_pipelined_window_allows_multiple_in_flight_segments_and_waits_before_go(self):
+        p = compile_bk(self.model, (35200, 0, 1800), BKSettings(paper_z=10))
+        segments = p.runs[0].segments[:6]
+        upload = PathUpload(7, 1, segments, window=4)
+        batch1 = [upload.next() for _ in range(4)]
+        self.assertTrue(all(cmd and cmd.startswith("SEG 7 1 ") for cmd in batch1))
+        self.assertIsNone(upload.next())
+        self.assertEqual(len(upload.in_flight), 4)
+        upload.ack(Ack(7, 1, "SEG", 1, "ok"))
+        self.assertEqual(len(upload.in_flight), 3)
+        cmd4 = upload.next()
+        self.assertTrue(cmd4 and cmd4.startswith("SEG 7 1 4 "))
+        for _ in range(4):
+            upload.ack(Ack(7, 1, "SEG", 1, "ok"))
+        cmd5 = upload.next()
+        self.assertTrue(cmd5 and cmd5.startswith("SEG 7 1 5 "))
+        # GO must wait until all in-flight SEG ACKs have arrived.
+        self.assertIsNone(upload.next())
+        upload.ack(Ack(7, 1, "SEG", 1, "ok"))
+        self.assertEqual(upload.next(), "GO 7 1")
+        upload.ack(Ack(7, 1, "GO", 1, "ok"))
+        self.assertTrue(upload.started)
+        self.assertEqual(upload.acked, 6)
+        self.assertIsNone(upload.next())
+
 
 if __name__ == "__main__":
     unittest.main()
