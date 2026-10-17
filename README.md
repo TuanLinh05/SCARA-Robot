@@ -2,21 +2,310 @@
 
 # SCARA Drawing Robot
 
+**A 2R + Z pen plotter based on X-SCARA mechanics · GUI R15 · Firmware R9**<br>
 **Robot vẽ 2R + Z trên cơ khí X-SCARA · GUI R15 · Firmware R9**
 
 Python/Tkinter · STM32F103C8 / Zephyr · MATLAB/Simulink · Webots
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-<img src="media/drawing-demo.gif" alt="Robot thực vẽ hoa trên giấy" height="360">
+<img src="media/drawing-demo.gif" alt="Real SCARA robot drawing a flower / Robot SCARA thực vẽ hoa" height="360">
 &nbsp;
-<img src="media/robot-wired.jpg" alt="Robot SCARA đã lắp ráp và đấu dây" height="360">
+<img src="media/robot-wired.jpg" alt="Assembled and wired robot / Robot đã lắp ráp và đấu dây" height="360">
 
-<sub>Ảnh và video robot thực từ các lần chạy trước. [Video gốc](media/drawing-demo.mp4)</sub>
+<sub>Real robot photos and video from earlier runs. [Original video](media/drawing-demo.mp4)<br>
+Ảnh và video robot thực từ các lần chạy trước. [Video gốc](media/drawing-demo.mp4)</sub>
 
-**[Tiếng Việt](#tiếng-việt)** · **[English](#english)**
+**[English](#english)** · **[Tiếng Việt](#tiếng-việt)**
 
 </div>
+
+# English
+
+This **HPMR course project, semester HK261**, controls a SCARA robot that draws shapes
+and text on paper. The frame and arm use the [madl3x/x-scara](https://github.com/madl3x/x-scara)
+design; work developed in this project includes the firmware, GUI, simulation and Deli EG118 pen holder.
+
+## Following this branch
+
+Branch: **`codex/scara-r15-upgrade-20261017`**.
+Initial upgrade: [`4a8317a`](https://github.com/TuanLinh05/SCARA-Robot/commit/4a8317ae81dedec2ba4cc48bac335332e0eb9d4c), dated **17 October 2026**.
+
+| Component | Status on this branch |
+| --- | --- |
+| GUI | R15, runs from Python source; includes a demo mode |
+| Firmware | Identifier `SCARA_CART_NC_HOME_V5_R9`, protocol 5; this branch includes further source changes |
+| MATLAB/Simulink | Stepper model `scara_stepper.slx`, using a calibration snapshot from recorded logs |
+| Webots | Separate physics research model; parameters are not yet aligned with the real robot's calibration |
+| EXE packaging | Script/spec still use R14 names; R15 packaging has not been revalidated |
+
+**Quick navigation:** [Changes](#main-changes) · [Run the GUI](#running-the-gui) ·
+[Operation](#drawing-workflow) · [Simulation](#simulation) ·
+[Testing](#testing) · [Source guide](#repository-layout-and-source-entry-points).
+
+## Main changes
+
+| Area | Changes | Source to follow |
+| --- | --- | --- |
+| R15 interface | Switch between 2D/3D views, separate 3D window, orbit/pan/zoom and SVG export; six metric cards and six switch indicators | [3D](Software/src/cartesian_nc_3d.py), [layout](Software/src/cartesian_nc_layout.py), [view](Software/src/cartesian_nc_view.py) |
+| Motion control | Step-jog, quick poses, speed adjustment and quick HOME after calibration | [editor](Software/src/cartesian_nc_editor.py), [motion](Software/src/cartesian_nc_motion.py) |
+| Drawing and file import | Single-stroke A–Z/0–9 text, SPIRAL/GRID/ROSE/POLYGON patterns, SVG/DXF/G-code, stroke ordering and background planning | [font](Software/src/cartesian_nc_font.py), [vector](Software/src/cartesian_nc_vector.py), [planning](Software/src/cartesian_nc_planning.py) |
+| Calibration | Backlash estimation/compensation, two-point switch-angle calibration and three-point paper-plane fitting | [calibration](Software/src/cartesian_nc_calibration.py), [model](Software/src/cartesian_nc_model.py) |
+| Data | Coordinate, joint-angle, speed/pulse-rate/FIFO plots; JSONL replay and CSV/SVG/Markdown export | [analytics](Software/src/cartesian_nc_analytics.py), [audit](Software/src/cartesian_nc_audit.py) |
+| Firmware | Full/quick HOME, belt-coupling handling, backlash compensation and telemetry; segment upload governed by ACKs and FIFO capacity | [core](Firmware/ScaraCartesian/src/cart_core.c), [commands](Firmware/ScaraCartesian/src/cart_commands.c), [upload](Software/src/cartesian_nc_path.py) |
+| Simulation and cleanup | MATLAB changes from PID/dynamics to replaying planner step counts; Webots controller updates; removal of `Firmware/Ref` and old MATLAB examples/models | [Simulation](Simulation/README.md), [MATLAB](Simulation/matlab/README.md) |
+
+The GUI's 3D view is a simplified visualization with dimensions referenced from STL assets.
+Telemetry and displayed positions are derived from step counts; the real robot has no encoders.
+
+## Running the GUI
+
+Run the following PowerShell commands from the **repository root**, where this README is located.
+The tested environment uses **Python 3.12**, Tkinter and `pyserial`.
+
+### Start with the demo
+
+```powershell
+python -m pip install -r Software/requirements.txt
+python Software/src/cartesian_nc_control.py --demo
+```
+
+Demo mode uses a simulated robot in software and does not open a real COM port.
+
+### Connect to the real robot
+
+```powershell
+python Software/src/cartesian_nc_control.py
+```
+
+On Windows, you can open [`Software/Run_Cartesian_GUI.bat`](Software/Run_Cartesian_GUI.bat)
+after installing the dependencies. The launcher prefers running the Python source.
+
+If an older EXE is present in `Software/dist/`, use the source command above to see the
+R15 changes. The packaging entry point is [`Build_Cartesian_NC_GUI.ps1`](Software/Build_Cartesian_NC_GUI.ps1);
+the script and spec still use the name `SCARA_Cartesian_NC_v5_R14`.
+
+## Drawing workflow
+
+1. Connect to COM and check **Cài đặt & Cơ khí** (Settings & Mechanics): link lengths,
+   lead-screw lead, driver microstepping, transmission ratios, DIR polarity and switch angles.
+2. Run **HOME / CALIB** to establish the reference and complete calibration. **HOME Nhanh**
+   (Quick HOME) reuses calibrated travel ranges stored in firmware memory; if no calibration
+   is available, the firmware performs a full HOME.
+3. Use XYZ or **Jog & Tùy biến** (Jog & Customization) to position the pen. Capture and confirm
+   **Z giấy** (paper Z). Use the wizard to calibrate switch angles or the paper plane when needed.
+4. Open **Thư viện hình & chữ** (Shape & Text Library): select a pattern, enter text or import
+   a vector file; set the size, center and rotation, then preview the path.
+5. Dry-run above the paper before drawing. The planner checks the complete stroke,
+   lifts the pen between strokes and lifts it again on completion.
+6. Use **Đồ thị & Báo cáo** (Plots & Reports) to inspect telemetry or export data.
+   Run HOME again when Stop/Esc, a connection/limit fault or releasing the arm invalidates the reference.
+
+GUI guide: [Software/README.md](Software/README.md).
+Analysis of recorded drawings: [drawing_audit_20261008.md](Software/reports/drawing_audit_20261008.md).
+
+## Hardware and configuration
+
+| Item | Reference configuration |
+| --- | --- |
+| Mechanism | Two revolute joints J1/J2 + a prismatic Z axis |
+| Links and pen tip | L1 = L2 = 98 mm; default TCP offset is zero and must be measured for the assembled robot |
+| Transmission | 2GT belts for the arm; Z lead screw with a configured lead of 2 mm/rev |
+| Motors and drivers | 3 × NEMA 17, 3 × TB6600, STEP/DIR/ENA |
+| Microcontroller | STM32F103C8, USB CDC, Zephyr 3.7 firmware |
+| Switches | Six COM-NC switches, two ends per axis |
+| Reference paper | 100 × 100 mm |
+
+GUI configuration is stored in [Software/cartesian_nc_config.json](Software/cartesian_nc_config.json).
+Axis arrays follow the order **[Z, J1, J2]**. The current configuration uses microstepping
+`[16, 16, 8]`, J1/J2 transmission ratios `[3, 9]` and `coupling = 0.333333`;
+check these against the actual drivers and mechanics.
+
+Distinguish the **angular** coupling factor `k` from the **step-count** coupling factor `β`:
+
+```text
+A = q1
+B = q2 + k*q1
+β = k*F2/F1
+```
+
+`q2` is the relative elbow angle; `F1/F2` are the respective axis factors in pulses per degree.
+The MATLAB snapshot contains data from a recorded run and can differ from the current GUI configuration.
+Do not copy a coupling factor between configurations without checking its definition and values.
+
+### Wiring and firmware
+
+Wire the TB6600 inputs common-cathode: PUL−, DIR− and ENA− connect to a shared GND.
+
+| Axis | PUL+ | DIR+ | ENA+ | DIR HIGH limit | DIR LOW limit |
+| --- | --- | --- | --- | --- | --- |
+| Z | PA0 | PA1 | PA2 | PA3, top | PA4, bottom |
+| J1 | PA8 | PB15 | PB14 | PB0 | PB1 |
+| J2 | PA6 | PA7 | PB13 | PB10 | PB11 |
+
+Connect switch COM to GND and NC to a GPIO pulled up to 3.3 V. The normal state is LOW;
+switch activation or an open wire reads HIGH. DIR polarity must match `positive_high`.
+
+Prebuilt HEX/BIN files are available in [Firmware/ScaraCartesian/Hex](Firmware/ScaraCartesian/Hex);
+flash at `0x08000000` using an ST-LINK. This branch retains the R9 identifier; the version
+label alone does not establish that the binary matches every source change. The validation
+run below did not rebuild MCU firmware or flash the robot.
+
+Building from source requires a Zephyr workspace, SDK, CMake and Ninja.
+The [build.ps1](Firmware/ScaraCartesian/tools/build.ps1) script accepts
+`-ZephyrRoot`, `-SdkRoot`, `-Python`, `-BuildDirectory` and `-SkipExport`.
+Use `-SkipExport` to build separately without overwriting the HEX/BIN files.
+See the [firmware guide](Firmware/ScaraCartesian/README.md).
+
+BOM/3D printing: [arm](Hardware/arm/BOM.md) · [frame](Hardware/frame/BOM.md) ·
+[print list](Hardware/3D%20Print/README.md) · [EG118 pen holder](Hardware/Pen_Holder_EG118).
+
+## Simulation
+
+| Environment | Purpose and parameter source | Entry point |
+| --- | --- | --- |
+| MATLAB/Simulink | Replays DDA step counts from the GUI planner, converts kinematics and studies NC/watchdog behavior and assumed deviations; snapshot in `matlab/config/robot_calibration.json` | [scara_stepper.slx](Simulation/matlab/simulink/models/scara_stepper.slx) |
+| Webots | Studies physics, PID and pen/paper contact using estimated values; uses `common/config/scara.json` | [scara_draw.wbt](Simulation/webots/worlds/scara_draw.wbt) |
+
+The two environments currently use different parameter sets. Webots results and the older
+comparison fixture do not validate the new stepper model or the accuracy of the real robot.
+
+### MATLAB/Simulink
+
+Set Current Folder to `Simulation/matlab`. Running the model requires MATLAB, Simulink,
+and Python with access to the Software source in the same repository.
+Robotics System Toolbox and Simscape Multibody are not required.
+
+```matlab
+run_scara                         % 3D interface and pattern selection
+startup_scara;
+out = scara_simulink('flower');    % Run the stepper model
+validate_scara;                   % Validate MATLAB/Simulink
+```
+
+The model uses standard Simulink blocks. The old MATLAB PID/dynamics simulator
+has been removed from this branch. See the [MATLAB guide](Simulation/matlab/README.md).
+
+<div align="center">
+<img src="Simulation/matlab/output/figures/assembly.png" alt="SCARA assembly model in MATLAB" height="280">
+&nbsp;
+<img src="Simulation/matlab/output/figures/tracking.png" alt="Simulated trajectory replay results" height="280">
+<br><sub>Saved simulation result images included in the repository.</sub>
+</div>
+
+### Webots
+
+Open `Simulation/webots/worlds/scara_draw.wbt` and press **Run**.
+Edit [demo.json](Simulation/webots/config/demo.json), then Reset/Reload to change the pattern/mode.
+The world is saved in R2025a format; the Webots runtime was not revalidated in this branch's
+validation run. See the [Webots guide](Simulation/webots/README.md).
+
+## Repository layout and source entry points
+
+```text
+.
+├── Firmware/ScaraCartesian/
+│   ├── src/                 Core, HOME, DDA, commands, telemetry, GPIO/timer
+│   ├── tests/               C harness and artifact tests
+│   ├── tools/               Build, verify, HEX/BIN checks
+│   └── Hex/                 Prebuilt firmware and reports
+├── Software/
+│   ├── src/                 R15 GUI, model, planner, vector, 3D, calibration, logs
+│   ├── tests/               Unit and GUI smoke tests using a simulated port
+│   ├── packaging/           PyInstaller spec, still named R14
+│   └── reports/             Test reports and log analysis
+├── Simulation/
+│   ├── matlab/              config/, src/, simulink/, tests/, tools/, output/
+│   ├── webots/              World, PROTO, controller, tests
+│   └── common/              Configuration/assets/CSV used by Webots
+├── Hardware/                STL, BOM, assembly guides, EG118 pen holder
+├── Doc/                     Firmware review and drawing deviations
+├── media/                   Real robot photos and video
+├── tools/                   Shared PowerShell tools
+└── Verify_SCARA.ps1         Tests firmware first, then software
+```
+
+Main control flow:
+
+```mermaid
+flowchart LR
+    GUI["R15 GUI: shapes, vector, XYZ"] --> PLAN["IK, preflight, background planner"]
+    PLAN --> USB["USB CDC: PATH / SEG / GO"]
+    USB --> FW["R9 firmware: 32-segment FIFO, DDA"]
+    FW --> MOTOR["TB6600 → Z / J1 / J2"]
+    NC["6 NC limit switches"] --> FW
+    FW --> DATA["Telemetry → GUI, JSONL, plots"]
+```
+
+Start reading at [cartesian_nc_control.py](Software/src/cartesian_nc_control.py)
+and [main.c](Firmware/ScaraCartesian/src/main.c).
+Planning/USB run on the PC; firmware generates pulses using a timer and enforces protections.
+Soft limits, NC switches, the 350 ms heartbeat, USB, GPIO and buffer underrun are handled in firmware.
+
+## Testing
+
+Run from the repository root; the firmware harness requires **Python and GCC**.
+These commands use simulated ports/peripherals and do not control the real robot.
+
+```powershell
+# Firmware C + artifact tests + all software unit tests
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Verify_SCARA.ps1
+
+# Include six GUI smoke scenarios
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Verify_SCARA.ps1 -Gui
+
+# Offline Webots tests; Webots installation is not required
+python -m unittest discover -s Simulation/webots/tests -v
+```
+
+Pass `-Python` and `-Gcc` to `Verify_SCARA.ps1` if the tools are not on PATH.
+Build/cache/log output is generated in directories ignored by Git.
+
+Validation results from **17 October 2026**, on source commit `4a8317a`:
+
+| Scope | Result |
+| --- | --- |
+| C harness: core, protocol, GPIO/timer ISR | Three test programs passed |
+| Firmware artifact-tool tests | 6/6 passed |
+| Software unit tests | 78/78 passed |
+| GUI smoke tests, including R15 and the calibration wizard | 6/6 scenarios passed |
+| Offline Webots tests | 14/14 passed |
+| MATLAB/Simulink | Not rerun; the [saved report](Simulation/matlab/output/validation/validation.json) is from an earlier validation |
+| MCU/real robot and EXE packaging | Not revalidated in this run |
+
+## Limits when interpreting results
+
+- Emitted step counts do not establish that the motor/pen reached the intended position.
+  Backlash, missed steps, link-length errors, switch angles and pen flex still require hardware measurements.
+- Backlash compensation and two-/three-point calibration are supporting tools; software tests have
+  not established the improvement in physical drawing quality on the R15 branch.
+- MATLAB data is an offline replay based on a snapshot. Backlash/lag blocks are sensitivity
+  scenarios rather than measured mechanical parameters; detailed driver electrical behavior is not modeled.
+- SVG/DXF/G-code readers are implemented in [cartesian_nc_vector.py](Software/src/cartesian_nc_vector.py).
+  Preview and preflight imported files; this is not a CAD/CAM system supporting every entity type.
+- Some component READMEs retain descriptions from earlier versions. The change table, repository
+  layout and validation results in this root README describe the branch state identified above.
+
+Analysis documents: [firmware review](Doc/Danh_gia_Firmware_SCARA.md) ·
+[simulation overview](Simulation/README.md).
+
+## Credits and license
+
+- Frame, arm, STL files, BOM and assembly images:
+  [madl3x/x-scara](https://github.com/madl3x/x-scara), GPL-3.0.
+  Source revision recorded in this project: `3c7c17e3dc0805b41a3cac6d4cd2778d585d7ed2`.
+- Mesh provenance:
+  [Simulation/common/assets/manifest.json](Simulation/common/assets/manifest.json).
+- Pen-holder attribution:
+  [Hardware/Pen_Holder_EG118/NOTICE.txt](Hardware/Pen_Holder_EG118/NOTICE.txt).
+
+Repository license: **[GNU GPL v3.0](LICENSE)**.
+
+<div align="center">
+Author: <a href="https://github.com/TuanLinh05">@TuanLinh05</a> · HK261
+</div>
+
+---
 
 # Tiếng Việt
 
@@ -287,78 +576,18 @@ Kết quả kiểm tra **17/10/2026**, trên mã nguồn commit `4a8317a`:
 Tài liệu phân tích: [đánh giá firmware](Doc/Danh_gia_Firmware_SCARA.md) ·
 [tổng quan mô phỏng](Simulation/README.md).
 
-# English
+## Nguồn và giấy phép
 
-This HPMR/HK261 project controls a **2R + Z SCARA pen plotter** based on X-SCARA
-mechanics. This branch, `codex/scara-r15-upgrade-20261017`, contains the **R15
-Python GUI**, firmware source retaining the **R9/protocol 5** identifier, and revised simulation tools.
-
-## Branch highlights
-
-- **GUI:** 2D/3D views, a separate 3D window, step-jog, quick poses, six metric
-  cards and six limit-switch indicators.
-- **Drawing:** single-stroke A–Z/0–9 text, parametric patterns, SVG/DXF/G-code
-  import, stroke ordering and background planning.
-- **Calibration and data:** backlash tools, two-point switch-angle calibration,
-  three-point paper-plane fitting, telemetry plots and CSV/SVG/Markdown export.
-- **Firmware:** full/quick homing, belt coupling, backlash handling, diagnostics
-  and ACK/FIFO-aware trajectory upload.
-- **Simulation:** MATLAB now replays planner step counts using
-  `scara_stepper.slx`. Webots remains a separate physics/PID research model
-  with its own estimated parameters.
-- **Cleanup:** the legacy `Firmware/Ref` project and old MATLAB PID examples/models
-  were removed.
-
-## Quick start
-
-Run these PowerShell commands from the repository root with Python 3.12:
-
-```powershell
-python -m pip install -r Software/requirements.txt
-python Software/src/cartesian_nc_control.py --demo
-```
-
-For hardware, run the same GUI command without `--demo`. Check mechanics and
-driver settings, perform **HOME / CALIB**, establish paper Z, preview the drawing,
-then dry-run before drawing. Quick HOME reuses calibration retained in firmware
-memory; without prior calibration it performs a full HOME.
-
-The Windows launcher is [Run_Cartesian_GUI.bat](Software/Run_Cartesian_GUI.bat).
-Packaging scripts still use R14 names; an R15 EXE has not been validated.
-
-For MATLAB, open `Simulation/matlab` and run `run_scara`; MATLAB, Simulink and
-Python are required to run the stepper model. For Webots, open
-`Simulation/webots/worlds/scara_draw.wbt`. See the
-[simulation overview](Simulation/README.md) for the different parameter sources.
-
-## Validation and limits
-
-On **17 October 2026**, source commit `4a8317a` passed three C host test programs,
-six firmware artifact-tool tests, **78 software unit tests**, **six GUI smoke
-scenarios**, and **14 offline Webots tests**. Use `Verify_SCARA.ps1 -Gui` and the
-Webots unittest command in the [testing section](#kiểm-thử) to repeat them.
-
-MATLAB, the Webots runtime, MCU builds, physical drawing and EXE packaging were
-not revalidated in that run. Prebuilt firmware retains the R9 name; check or
-rebuild it before assuming it matches every source change.
-
-The robot is open-loop. Displayed positions and telemetry are based on step
-counts, not physical encoder feedback. Software tests and offline simulation
-do not establish pen accuracy on paper. The GUI's simplified 3D view is a
-visual aid, with dimensions referenced from the STL assets.
-
-## Nguồn và giấy phép / Credits and license
-
-- Khung, tay, STL, BOM và ảnh lắp ráp / frame and arm design:
+- Khung, tay, STL, BOM và ảnh lắp ráp:
   [madl3x/x-scara](https://github.com/madl3x/x-scara), GPL-3.0.
-  Source revision recorded in this project: `3c7c17e3dc0805b41a3cac6d4cd2778d585d7ed2`.
-- Nguồn mesh / mesh provenance:
+  Phiên bản nguồn được ghi trong project: `3c7c17e3dc0805b41a3cac6d4cd2778d585d7ed2`.
+- Nguồn mesh:
   [Simulation/common/assets/manifest.json](Simulation/common/assets/manifest.json).
-- Giá kẹp bút / pen-holder attribution:
+- Ghi nhận nguồn giá kẹp bút:
   [Hardware/Pen_Holder_EG118/NOTICE.txt](Hardware/Pen_Holder_EG118/NOTICE.txt).
 
-Repository license: **[GNU GPL v3.0](LICENSE)**.
+Giấy phép repository: **[GNU GPL v3.0](LICENSE)**.
 
 <div align="center">
-Tác giả / Author: <a href="https://github.com/TuanLinh05">@TuanLinh05</a> · HK261
+Tác giả: <a href="https://github.com/TuanLinh05">@TuanLinh05</a> · HK261
 </div>
