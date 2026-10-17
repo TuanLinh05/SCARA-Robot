@@ -2,585 +2,363 @@
 
 # SCARA Drawing Robot
 
-**A 2R + Z SCARA robot that draws with a pen, built on the 3D-printed X-SCARA mechanics.**<br>
-Zephyr firmware for STM32F103 · Python GUI with Cartesian control · MATLAB/Simulink and Webots simulation
+**Robot vẽ 2R + Z trên cơ khí X-SCARA · GUI R15 · Firmware R9**
+
+Python/Tkinter · STM32F103C8 / Zephyr · MATLAB/Simulink · Webots
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-![MCU](https://img.shields.io/badge/MCU-STM32F103C8-03234B?logo=stmicroelectronics)
-![Zephyr](https://img.shields.io/badge/RTOS-Zephyr%203.7-6E3FF5?logo=zephyrproject)
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![MATLAB](https://img.shields.io/badge/MATLAB-R2026a-E16737?logo=mathworks)
-![Webots](https://img.shields.io/badge/Webots-R2025a-D52626)
 
-<img src="media/drawing-demo.gif" alt="The robot drawing a six-petal flower next to the word LINH and a star" height="420">
+<img src="media/drawing-demo.gif" alt="Robot thực vẽ hoa trên giấy" height="360">
 &nbsp;
-<img src="media/robot-wired.jpg" alt="The assembled and wired SCARA robot" height="420">
+<img src="media/robot-wired.jpg" alt="Robot SCARA đã lắp ráp và đấu dây" height="360">
 
-<sub>The real robot drawing a six-petal flower (GIF at 2× speed) · [Original video](media/drawing-demo.mp4)</sub>
+<sub>Ảnh và video robot thực từ các lần chạy trước. [Video gốc](media/drawing-demo.mp4)</sub>
 
-**[English](#english)** · **[Tiếng Việt](#tiếng-việt)**
+**[Tiếng Việt](#tiếng-việt)** · **[English](#english)**
 
 </div>
-
----
-
-# English
-
-## Contents
-
-- [Demo](#demo)
-- [Overview](#overview)
-- [Features](#features)
-- [System architecture](#system-architecture)
-- [Repository layout](#repository-layout)
-- [Hardware](#hardware)
-- [Getting started](#getting-started)
-- [Simulation](#simulation)
-- [Testing](#testing)
-- [Known limitations](#known-limitations)
-- [Documentation](#documentation)
-- [Credits & license](#credits--license)
-
-## Demo
-
-The robot draws a six-petal flower from the GUI, on a sheet that already has
-the word **LINH** and a star from earlier runs:
-[`media/drawing-demo.mp4`](media/drawing-demo.mp4).
-
-| Wired robot | Frame, Z axis and 3 drivers | TB6600 driver |
-| :---: | :---: | :---: |
-| <img src="media/robot-wired.jpg" alt="Wired robot" width="260"> | <img src="media/robot-side-1.jpg" alt="Side view with three TB6600 drivers" width="260"> | <img src="media/tb6600-driver.jpg" alt="TB6600 microstep and current table" width="260"> |
-
-More side views: [1](media/robot-side-1.jpg) · [2](media/robot-side-2.jpg) ·
-[3](media/robot-side-3.jpg) · [4](media/robot-side-4.jpg).
-
-## Overview
-
-Course project for **HPMR (semester HK261)**: build and control a SCARA robot
-that draws shapes and text on paper.
-
-> [!NOTE]
-> **The frame and arm hardware come from the open-source
-> [X-SCARA project by madl3x](https://github.com/madl3x/x-scara/tree/master)** (GPL-3.0).
-> The STL files, BOMs and assembly images in `Hardware/arm`, `Hardware/frame`
-> and `Hardware/3D Print` belong to that project. Our own work is the firmware,
-> the GUI, the simulation and the Deli EG118 pen holder.
-
-| Parameter | Value |
-| --- | --- |
-| Kinematics | 2 revolute joints (shoulder J1, elbow J2) + prismatic Z axis |
-| Link lengths | L1 = L2 = 98 mm |
-| Transmission | 2GT belts (J1, J2), Tr8 lead screw with 2 mm lead (Z) |
-| Motors / drivers | 3 × NEMA 17 + 3 × TB6600 (STEP/DIR) |
-| Microcontroller | STM32F103C8 (Blue Pill), USB CDC link to the PC |
-| Homing | 6 limit switches (both ends of every axis, COM-NC wiring) |
-| Default drawing area | 100 × 100 mm paper |
-
-## Features
-
-**Firmware** - [`Firmware/ScaraCartesian`](Firmware/ScaraCartesian)
-- Zephyr 3.7, build `SCARA_CART_NC_HOME_V5_R9`, protocol 5.
-- Automatic HOME/CALIB: sweeps both ends of every axis and measures the elbow
-  coupling ratio `k = dB/dA`.
-- Step generation in a 1 MHz TIM2 interrupt with 3-axis DDA interpolation.
-- 32-segment queue (`PATH`/`SEG`/`GO`) with a fixed-point quintic velocity profile.
-- Safety: all 6 switches checked on every pulse edge, soft limits, 350 ms
-  heartbeat, USB loss, GPIO readback and buffer underrun. Any fault clears the
-  home reference and stops the robot.
-
-**Control GUI** - [`Software`](Software)
-- Python 3.12 + Tkinter + pyserial. A `--demo` mode runs without a robot.
-- Forward/inverse kinematics, reach checks, and a preflight of every stroke
-  before anything is sent.
-- XYZ jogging, mechanical model tuning, test point sequences.
-- Shape & text library: BK, LINH, THOA, six-petal flower, star, heart, circle,
-  ellipse, square, triangle, rhombus. Shapes auto-fit the drawing area and the
-  pen lifts between strokes.
-- JSONL session logs and a log analysis tool (`cartesian_nc_audit.py`).
-
-**Simulation** - [`Simulation`](Simulation)
-- MATLAB/Simulink: FK/IK, dynamics, PID + feedforward, a 3D app built from the STL files.
-- Webots: rigid-body physics, pen-paper contact, a Python controller that uses only the standard library.
-- Both environments share one parameter file (`common/config/scara.json`) and the same CSV trajectories.
-
-**Hardware** - [`Hardware`](Hardware)
-- Print list for all 38 parts by color and quantity, mechanical BOMs, assembly images.
-- Deli EG118 pen holder: OpenSCAD + Python source and ready-to-print STL files.
-
-<div align="center">
-<img src="Simulation/matlab/output/figures/tracking.png" alt="Simulated trajectory tracking of the SCARA drawing robot" width="720">
-<br><sub>Simulated trajectory tracking and pulse-level kinematics replay on the 100 × 100 mm drawing workspace.</sub>
-</div>
-
-## System architecture
-
-```mermaid
-flowchart LR
-    subgraph PC["PC"]
-        GUI["Python GUI<br/>IK · path planning · preflight"]
-        LOG[("Session log<br/>.jsonl")]
-        GUI --> LOG
-    end
-    subgraph MCU["STM32F103C8 · Zephyr"]
-        CMD["Command parser<br/>32-segment FIFO"]
-        PULSE["TIM2 1 MHz<br/>DDA + velocity profile"]
-        CMD --> PULSE
-    end
-    GUI -- "USB CDC<br/>PATH / SEG / GO / STATUS" --> CMD
-    PULSE -- "STEP / DIR / ENA" --> DRV["3 × TB6600"]
-    DRV --> MOT["NEMA 17<br/>Z · J1 · J2"]
-    SW["6 limit switches"] --> PULSE
-```
-
-The GUI solves IK and splits each stroke into segments of about 0.75 mm before
-sending them. The firmware only works in motor step counts. There is no encoder,
-so the displayed position is an estimate from the steps sent.
-
-## Repository layout
-
-```text
-.
-├── Firmware/
-│   ├── ScaraCartesian/       Main firmware (Zephyr): src/, tests/, tools/, Hex/ (prebuilt)
-│   └── Ref/                  Original STM32CubeIDE project, reference only
-├── Software/
-│   ├── src/                  GUI, kinematic model, protocol, shapes, logging
-│   ├── tests/                Unit tests + GUI smoke tests (simulated port)
-│   ├── packaging/            PyInstaller spec
-│   └── reports/              Test reports and drawing analysis
-├── Simulation/
-│   ├── common/               Shared parameters, CSV trajectories, meshes converted from STL
-│   ├── matlab/               MATLAB/Simulink: src/, simulink/, examples/, tests/
-│   └── webots/               World, PROTOs, Python controller, tests/
-├── Hardware/                 Frame + arm from madl3x/x-scara (GPL-3.0)
-│   ├── 3D Print/             STL files sorted by color and print quantity
-│   ├── arm/, frame/          Original X-SCARA STLs, BOMs, assembly images
-│   └── Pen_Holder_EG118/     Pen holder (SCAD, Python, STL)
-├── Doc/                      Firmware review and causes of drawing errors
-└── media/                    Photos and video of the real robot
-```
-
-## Hardware
-
-The frame (2020/2040 aluminium extrusion, three Ø8 mm rods, Tr8 lead screw) and
-the arm use the
-**[madl3x/x-scara](https://github.com/madl3x/x-scara/tree/master)** design
-unchanged. See the original repository for the latest design and full assembly guide.
-
-### Wiring
-
-The TB6600 inputs are wired common-cathode: PUL-, DIR- and ENA- go to a shared GND.
-
-| Axis | PUL+ | DIR+ | ENA+ | Limit switch (DIR HIGH end) | Limit switch (DIR LOW end) |
-| --- | --- | --- | --- | --- | --- |
-| Z  | PA0 | PA1  | PA2  | PA3 (top) | PA4 (bottom) |
-| J1 | PA8 | PB15 | PB14 | PB0  | PB1  |
-| J2 | PA6 | PA7  | PB13 | PB10 | PB11 |
-
-Switches use **COM-NC**: COM → GND, NC → GPIO (pulled up to 3.3 V), NO left open.
-The input reads LOW normally and HIGH when the switch is pressed or a wire
-breaks, so a broken wire is also treated as a fault.
-
-### 3D printing and assembly
-
-- Print list: [`Hardware/3D Print/README.md`](Hardware/3D%20Print/README.md)
-  (14 frame parts, 23 arm parts, 1 test part).
-- BOMs and assembly images: [`Hardware/arm/BOM.md`](Hardware/arm/BOM.md),
-  [`Hardware/frame/BOM.md`](Hardware/frame/BOM.md).
-- Pen holder: [`Hardware/Pen_Holder_EG118`](Hardware/Pen_Holder_EG118).
-
-## Getting started
-
-### 1. Flash the firmware
-
-Prebuilt images are in `Firmware/ScaraCartesian/Hex/`:
-`SCARA_Cartesian_NC_Home_v5_R9.hex` (or `.bin`). Flash at `0x08000000` with an
-ST-LINK (STM32CubeProgrammer or `st-flash`), then reset the board.
-
-Building from source needs Zephyr SDK 0.16.8 and a `west` workspace. See
-[`Firmware/ScaraCartesian/README.md`](Firmware/ScaraCartesian/README.md) and
-`tools/build.ps1`, and change the `D:/zephyrproject` and `D:/zephyr-sdk`
-paths to match your machine.
-
-### 2. Run the GUI
-
-```bash
-cd Software
-pip install -r requirements.txt
-python src/cartesian_nc_control.py
-```
-
-Add `--demo` to run against a simulated robot without opening a real COM port.
-
-Package a Windows EXE with PyInstaller:
-
-```bash
-powershell -ExecutionPolicy Bypass -File Software/Build_Cartesian_NC_GUI.ps1 -Python python
-```
-
-The output goes to `Software/dist/`, which is not tracked in git.
-
-### 3. Draw
-
-The GUI labels are in Vietnamese; the English meaning is given in brackets.
-
-1. Pick the COM port, check the **Cơ khí** (Mechanics) settings, then press
-   **HOME / CALIB**. The GUI must report firmware `SCARA_CART_NC_HOME_V5_R9`.
-2. Lower the pen until it just touches the paper and confirm **Z giấy** (paper Z).
-3. Open **Thư viện hình & chữ** (Shape & text library) and choose a shape, size and center.
-4. Do a **Chạy khô** (dry run) first, then draw for real.
-5. Stop/Esc, USB loss or a limit fault clears the home reference. HOME again afterwards.
-
-Full usage and calibration notes (Vietnamese): [`Software/README.md`](Software/README.md).
-
-## Simulation
-
-| Environment | How to run | Guide |
-| --- | --- | --- |
-| MATLAB/Simulink | Open `Simulation/matlab` and run `run_scara` | [`Simulation/matlab/README.md`](Simulation/matlab/README.md) |
-| Webots | Open `Simulation/webots/worlds/scara_draw.wbt` and press **Run** | [`Simulation/webots/README.md`](Simulation/webots/README.md) |
-
-MATLAB does not need the Robotics System Toolbox or Simscape Multibody.
-Simulink is only needed to open the `.slx` model.
-
-<div align="center">
-<img src="Simulation/matlab/output/figures/assembly.png" alt="3D X-SCARA assembly model on 100 × 100 mm paper" height="360">
-&nbsp;
-<img src="Simulation/matlab/output/figures/app_ui.png" alt="MATLAB simulation app" height="360">
-</div>
-
-## Testing
-
-None of the tests need the real robot.
-
-```bash
-# GUI unit tests (add -Gui to also run the GUI smoke tests)
-powershell -ExecutionPolicy Bypass -File Software/Verify_Cartesian_NC_GUI.ps1 -Python python
-
-# Firmware: builds a host C harness and tests homing, DDA, limits and the watchdog
-powershell -ExecutionPolicy Bypass -File Firmware/ScaraCartesian/tools/verify.ps1 -Gcc gcc -Python python
-
-# Webots offline tests (Webots does not need to be installed)
-python -m unittest discover -s Simulation/webots/tests -v
-```
-
-The firmware host tests need GCC (for example MSYS2 UCRT64). For MATLAB, run
-the scripts in `Simulation/matlab/tests/`.
-
-## Known limitations & recent upgrades
-
-Analysis of logs from the real hardware (6 homing runs, 58 strokes) identified several root causes, which have now been addressed in source:
-
-- **Kinematic calibration & coupling**: Firmware and GUI now support nominal pulley factors (`factors = 24.0, 24.0 steps/deg` from `16×` microstepping and `20T:54T` belt reduction), locked mechanical coupling (`β = 1/3`, `k = 0.5`), and center-latch homing without needing full ±limit sweeps.
-- **Performance & streaming**: Firmware math uses single-precision `float` on Cortex-M3 (`sinf`/`cosf`/`atan2f`/`sqrtf`), a 256-byte non-dropping UART RX ring buffer, credit-based pipelined `SEG` streaming (up to 8 in-flight segments), and background trajectory planning with SVG/DXF/G-code import and 2-opt TSP stroke ordering.
-- **Mechanical backlash**: Visibly kinked or curved straight lines on physical hardware are mainly caused by belt/pen-holder backlash (no closed-loop encoder).
-
-Full analysis and proposed fixes (Vietnamese):
-[`Doc/Danh_gia_Firmware_SCARA.md`](Doc/Danh_gia_Firmware_SCARA.md).
-
-## Documentation
-
-The detailed documents are written in Vietnamese.
-
-| Document | Contents |
-| --- | --- |
-| [Doc/Danh_gia_Firmware_SCARA.md](Doc/Danh_gia_Firmware_SCARA.md) | Firmware review, causes of skewed or curved strokes |
-| [Firmware/ScaraCartesian/README.md](Firmware/ScaraCartesian/README.md) | Wiring, homing, protections, build |
-| [Software/README.md](Software/README.md) | GUI usage, mechanical calibration |
-| [Software/reports/drawing_audit_20261008.md](Software/reports/drawing_audit_20261008.md) | Stroke analysis from real hardware logs |
-| [Simulation/README.md](Simulation/README.md) | Simulation overview and model assumptions |
-
-## Credits & license
-
-- **Frame and arm hardware** (STL, assembly images, BOM):
-  [madl3x/x-scara](https://github.com/madl3x/x-scara/tree/master) by
-  [@madl3x](https://github.com/madl3x), commit `3c7c17e`, licensed **GPL-3.0**.
-- The simulation meshes and the pen holder are derived from those STL files.
-  Sources and hashes are recorded in `Simulation/common/assets/manifest.json`
-  and `Hardware/Pen_Holder_EG118/NOTICE.txt`.
-- `Firmware/Ref` contains STM32CubeMX/HAL generated code (STMicroelectronics license).
-
-Because it includes work derived from X-SCARA, this repository is released under
-the **[GNU GPL v3.0](LICENSE)**.
-
-<div align="right"><a href="#scara-drawing-robot">Back to top ↑</a></div>
-
----
 
 # Tiếng Việt
 
-## Mục lục
+Project môn **HPMR, học kỳ HK261**: điều khiển robot SCARA vẽ hình và chữ trên giấy.
+Khung và tay dùng thiết kế [madl3x/x-scara](https://github.com/madl3x/x-scara);
+phần phát triển trong project gồm firmware, GUI, mô phỏng và giá kẹp bút Deli EG118.
 
-- [Hình ảnh thực tế](#hình-ảnh-thực-tế)
-- [Giới thiệu](#giới-thiệu)
-- [Tính năng](#tính-năng)
-- [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
-- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
-- [Phần cứng](#phần-cứng)
-- [Bắt đầu nhanh](#bắt-đầu-nhanh)
-- [Mô phỏng](#mô-phỏng)
-- [Kiểm thử](#kiểm-thử)
-- [Hạn chế đã biết](#hạn-chế-đã-biết)
-- [Tài liệu](#tài-liệu)
-- [Nguồn tham khảo & giấy phép](#nguồn-tham-khảo--giấy-phép)
+## Theo dõi branch này
 
-## Hình ảnh thực tế
+Branch: **`codex/scara-r15-upgrade-20261017`**.
+Bản nâng cấp ban đầu: [`4a8317a`](https://github.com/TuanLinh05/SCARA-Robot/commit/4a8317ae81dedec2ba4cc48bac335332e0eb9d4c), ngày **17/10/2026**.
 
-Video robot vẽ hoa 6 cánh bằng GUI, trên tờ giấy đã có chữ **LINH** và ngôi
-sao vẽ từ các lần chạy trước: [`media/drawing-demo.mp4`](media/drawing-demo.mp4).
-
-| Robot đã đấu dây | Khung, trục Z và 3 driver | Driver TB6600 |
-| :---: | :---: | :---: |
-| <img src="media/robot-wired.jpg" alt="Robot đã đấu dây" width="260"> | <img src="media/robot-side-1.jpg" alt="Mặt bên robot với ba driver TB6600" width="260"> | <img src="media/tb6600-driver.jpg" alt="Bảng cài vi bước và dòng của TB6600" width="260"> |
-
-Thêm ảnh mặt bên: [1](media/robot-side-1.jpg) · [2](media/robot-side-2.jpg) ·
-[3](media/robot-side-3.jpg) · [4](media/robot-side-4.jpg).
-
-## Giới thiệu
-
-Project môn **HPMR (HK261)**: chế tạo và điều khiển một robot SCARA để vẽ
-hình và chữ lên giấy.
-
-> [!NOTE]
-> **Phần cứng khung và tay robot lấy từ dự án mã nguồn mở
-> [X-SCARA của madl3x](https://github.com/madl3x/x-scara/tree/master)** (GPL-3.0).
-> Các file STL, BOM và ảnh lắp ráp trong `Hardware/arm`, `Hardware/frame`,
-> `Hardware/3D Print` thuộc về dự án đó. Phần do nhóm tự làm gồm firmware,
-> GUI, mô phỏng và giá kẹp bút Deli EG118.
-
-| Thông số | Giá trị |
+| Thành phần | Trạng thái trên branch |
 | --- | --- |
-| Cấu hình | 2 khớp quay (vai J1, khuỷu J2) + trục Z tịnh tiến |
-| Chiều dài khâu | L1 = L2 = 98 mm |
-| Truyền động | Đai 2GT (J1, J2), vít me Tr8 bước 2 mm (Z) |
-| Động cơ / driver | 3 × NEMA 17 + 3 × TB6600 (STEP/DIR) |
-| Vi điều khiển | STM32F103C8 (Blue Pill), giao tiếp USB CDC |
-| Gốc tọa độ | 6 công tắc hành trình (2 biên mỗi trục, kiểu COM-NC) |
-| Vùng vẽ mặc định | Giấy 100 × 100 mm |
+| GUI | R15, chạy từ mã nguồn Python; có chế độ demo |
+| Firmware | Nhãn `SCARA_CART_NC_HOME_V5_R9`, protocol 5; có thêm thay đổi mã nguồn trên branch |
+| MATLAB/Simulink | Mô hình stepper `scara_stepper.slx`, dùng snapshot hiệu chuẩn từ log |
+| Webots | Mô hình vật lý nghiên cứu riêng; tham số chưa đồng bộ với hiệu chuẩn robot thực |
+| Đóng gói EXE | Script/spec vẫn mang tên R14; chưa kiểm chứng lại bản đóng gói R15 |
 
-## Tính năng
+**Đọc nhanh:** [Thay đổi](#các-thay-đổi-chính) · [Chạy GUI](#chạy-gui) ·
+[Vận hành](#quy-trình-vẽ) · [Mô phỏng](#mô-phỏng) ·
+[Kiểm thử](#kiểm-thử) · [Đọc mã](#cấu-trúc-và-điểm-vào-mã-nguồn).
 
-**Firmware** - [`Firmware/ScaraCartesian`](Firmware/ScaraCartesian)
-- Zephyr 3.7, bản dựng `SCARA_CART_NC_HOME_V5_R9`, protocol 5.
-- HOME/CALIB tự động: quét hai biên mỗi trục, đo hệ số ghép khuỷu `k = dB/dA`.
-- Phát xung bằng ngắt TIM2 1 MHz, nội suy DDA cho 3 trục.
-- Hàng đợi 32 đoạn (`PATH`/`SEG`/`GO`), profile vận tốc bậc 5 dạng fixed-point.
-- An toàn: kiểm tra 6 công tắc ở mỗi cạnh xung, giới hạn mềm, heartbeat 350 ms,
-  mất USB, readback GPIO, cạn bộ đệm. Mọi lỗi đều hủy mốc và dừng.
+## Các thay đổi chính
 
-**GUI điều khiển** - [`Software`](Software)
-- Python 3.12 + Tkinter + pyserial. Có chế độ `--demo` không cần robot.
-- Động học thuận/ngược (FK/IK), kiểm tra vùng với tới, preflight toàn bộ nét
-  trước khi gửi.
-- Điều khiển XYZ, chỉnh mô hình cơ khí, chuỗi điểm thử.
-- Thư viện hình & chữ: BK, LINH, THOA, hoa 6 cánh, sao, trái tim, tròn, elip,
-  vuông, tam giác, hình thoi. Tự co giãn vừa vùng vẽ, nâng bút giữa các nét.
-- Ghi log phiên dạng JSONL và công cụ phân tích log (`cartesian_nc_audit.py`).
+| Nhóm | Nội dung | Mã nguồn để theo dõi |
+| --- | --- | --- |
+| Giao diện R15 | Chuyển giữa khung 2D/3D, cửa sổ 3D riêng, xoay/dịch/zoom và xuất SVG; 6 thẻ thông số và 6 đèn công tắc | [3D](Software/src/cartesian_nc_3d.py), [layout](Software/src/cartesian_nc_layout.py), [view](Software/src/cartesian_nc_view.py) |
+| Điều khiển | Step-jog, tư thế nhanh, điều chỉnh tốc độ và HOME nhanh sau khi đã hiệu chuẩn | [editor](Software/src/cartesian_nc_editor.py), [motion](Software/src/cartesian_nc_motion.py) |
+| Vẽ và nhập file | Chữ nét đơn A–Z/0–9, mẫu SPIRAL/GRID/ROSE/POLYGON, SVG/DXF/G-code, sắp xếp nét và lập quỹ đạo nền | [font](Software/src/cartesian_nc_font.py), [vector](Software/src/cartesian_nc_vector.py), [planning](Software/src/cartesian_nc_planning.py) |
+| Hiệu chuẩn | Ước lượng/bù độ rơ, hiệu chuẩn góc công tắc bằng 2 điểm, mặt phẳng giấy bằng 3 điểm | [calibration](Software/src/cartesian_nc_calibration.py), [model](Software/src/cartesian_nc_model.py) |
+| Dữ liệu | Đồ thị tọa độ, góc khớp, tốc độ/xung/FIFO; đọc log JSONL và xuất CSV/SVG/Markdown | [analytics](Software/src/cartesian_nc_analytics.py), [audit](Software/src/cartesian_nc_audit.py) |
+| Firmware | HOME đầy đủ/nhanh, xử lý ghép đai, bù độ rơ và telemetry; truyền đoạn theo ACK và dung lượng FIFO | [core](Firmware/ScaraCartesian/src/cart_core.c), [commands](Firmware/ScaraCartesian/src/cart_commands.c), [upload](Software/src/cartesian_nc_path.py) |
+| Mô phỏng và dọn nguồn | MATLAB chuyển từ PID/động lực học sang tái hiện số xung của planner; cập nhật controller Webots; bỏ `Firmware/Ref` và các ví dụ/mô hình MATLAB cũ | [Simulation](Simulation/README.md), [MATLAB](Simulation/matlab/README.md) |
 
-**Mô phỏng** - [`Simulation`](Simulation)
-- MATLAB/Simulink: FK/IK, động lực học, PID + feedforward, giao diện 3D từ STL.
-- Webots: vật lý vật rắn, tiếp xúc bút-giấy, controller Python chỉ dùng thư viện chuẩn.
-- Hai môi trường dùng chung tham số (`common/config/scara.json`) và quỹ đạo CSV.
+Khung 3D trong GUI là mô hình hiển thị giản lược, có tham chiếu kích thước STL.
+Telemetry và vị trí hiển thị được suy ra từ số xung; robot thực chưa có encoder.
 
-**Phần cứng** - [`Hardware`](Hardware)
-- Danh sách 38 bản in 3D theo màu/số lượng, BOM cơ khí, ảnh hướng dẫn lắp ráp.
-- Giá kẹp bút Deli EG118: mã nguồn OpenSCAD + Python, STL sẵn để in.
+## Chạy GUI
 
-<div align="center">
-<img src="Simulation/matlab/output/figures/tracking.png" alt="Mô phỏng bám quỹ đạo của robot vẽ SCARA" width="720">
-<br><sub>Mô phỏng bám quỹ đạo và tái hiện xung điều khiển trên vùng giấy vẽ 100 × 100 mm.</sub>
-</div>
+Các lệnh PowerShell dưới đây chạy từ **thư mục gốc repository**, nơi có README này.
+Môi trường đã kiểm thử: **Python 3.12**, Tkinter và `pyserial`.
 
-## Kiến trúc hệ thống
+### Chạy demo trước
 
-```mermaid
-flowchart LR
-    subgraph PC["Máy tính"]
-        GUI["GUI Python<br/>IK · lập quỹ đạo · preflight"]
-        LOG[("Log phiên<br/>.jsonl")]
-        GUI --> LOG
-    end
-    subgraph MCU["STM32F103C8 · Zephyr"]
-        CMD["Bộ phân tích lệnh<br/>FIFO 32 đoạn"]
-        PULSE["TIM2 1 MHz<br/>DDA + profile vận tốc"]
-        CMD --> PULSE
-    end
-    GUI -- "USB CDC<br/>PATH / SEG / GO / STATUS" --> CMD
-    PULSE -- "STEP / DIR / ENA" --> DRV["3 × TB6600"]
-    DRV --> MOT["NEMA 17<br/>Z · J1 · J2"]
-    SW["6 công tắc hành trình"] --> PULSE
+```powershell
+python -m pip install -r Software/requirements.txt
+python Software/src/cartesian_nc_control.py --demo
 ```
 
-GUI tính IK và chia mỗi nét thành các đoạn khoảng 0,75 mm rồi gửi xuống.
-Firmware chỉ làm việc với số xung của động cơ. Robot không có encoder nên vị
-trí hiển thị là ước tính từ số xung đã phát.
+Demo dùng robot giả lập trong phần mềm, không mở cổng COM thật.
 
-## Cấu trúc thư mục
+### Kết nối robot thực
+
+```powershell
+python Software/src/cartesian_nc_control.py
+```
+
+Trên Windows có thể mở [`Software/Run_Cartesian_GUI.bat`](Software/Run_Cartesian_GUI.bat)
+sau khi cài các phụ thuộc. Launcher ưu tiên chạy mã nguồn Python.
+
+Nếu có EXE cũ trong `Software/dist/`, dùng lệnh chạy nguồn ở trên để xem các thay đổi
+R15. Điểm vào đóng gói là [`Build_Cartesian_NC_GUI.ps1`](Software/Build_Cartesian_NC_GUI.ps1);
+script và spec hiện vẫn dùng tên `SCARA_Cartesian_NC_v5_R14`.
+
+## Quy trình vẽ
+
+1. Kết nối COM, kiểm tra **Cài đặt & Cơ khí**: chiều dài khâu, bước vít me,
+   vi bước driver, tỷ số truyền, chiều DIR và góc công tắc.
+2. Chạy **HOME / CALIB** để lấy mốc và hiệu chuẩn đầy đủ. **HOME Nhanh** dùng lại
+   hành trình đã hiệu chuẩn trong bộ nhớ firmware; khi chưa có dữ liệu, firmware
+   thực hiện HOME đầy đủ.
+3. Dùng XYZ hoặc **Jog & Tùy biến** để rà bút. Lấy và xác nhận **Z giấy**.
+   Khi cần, dùng wizard để hiệu chuẩn góc công tắc hoặc mặt phẳng giấy.
+4. Mở **Thư viện hình & chữ**: chọn mẫu, nhập chữ hoặc nạp vector; chỉnh kích thước,
+   tâm, góc xoay và xem trước đường chạy.
+5. Chạy thử trên không trước, sau đó vẽ thật. Bộ lập quỹ đạo kiểm tra toàn bộ nét,
+   nâng bút khi chuyển nét và khi hoàn tất.
+6. Dùng **Đồ thị & Báo cáo** để quan sát telemetry hoặc xuất dữ liệu.
+   Sau Dừng/Esc, lỗi kết nối/biên hoặc nhả arm làm mất mốc, cần HOME lại.
+
+Hướng dẫn giao diện: [Software/README.md](Software/README.md).
+Phân tích nét vẽ đã ghi: [drawing_audit_20261008.md](Software/reports/drawing_audit_20261008.md).
+
+## Phần cứng và cấu hình
+
+| Mục | Cấu hình tham chiếu |
+| --- | --- |
+| Cơ cấu | 2 khớp quay J1/J2 + trục Z tịnh tiến |
+| Khâu và đầu bút | L1 = L2 = 98 mm; lệch TCP mặc định bằng 0, cần đo theo cụm lắp |
+| Truyền động | Đai 2GT cho tay; vít me Z, bước dẫn cấu hình 2 mm/vòng |
+| Động cơ và driver | 3 × NEMA 17, 3 × TB6600, STEP/DIR/ENA |
+| Vi điều khiển | STM32F103C8, USB CDC, firmware Zephyr 3.7 |
+| Công tắc | 6 công tắc COM-NC, hai biên mỗi trục |
+| Giấy tham chiếu | 100 × 100 mm |
+
+Cấu hình GUI nằm ở [Software/cartesian_nc_config.json](Software/cartesian_nc_config.json).
+Thứ tự các mảng trục là **[Z, J1, J2]**. Cấu hình hiện tại dùng vi bước
+`[16, 16, 8]`, tỷ số truyền J1/J2 `[3, 9]` và `coupling = 0.333333`;
+phải đối chiếu với driver và cơ khí thực tế.
+
+Phân biệt hệ số ghép **góc** `k` và hệ số ghép **xung** `β`:
 
 ```text
-.
-├── Firmware/
-│   ├── ScaraCartesian/       Firmware chính (Zephyr): src/, tests/, tools/, Hex/ (bản dựng sẵn)
-│   └── Ref/                  Dự án STM32CubeIDE gốc, chỉ để tham khảo
-├── Software/
-│   ├── src/                  GUI, mô hình động học, giao thức, hình vẽ, log
-│   ├── tests/                Unit test + GUI smoke test (cổng giả lập)
-│   ├── packaging/            File spec PyInstaller
-│   └── reports/              Báo cáo kiểm thử và phân tích nét vẽ
-├── Simulation/
-│   ├── common/               Tham số chung, quỹ đạo CSV, mesh chuyển đổi từ STL
-│   ├── matlab/               MATLAB/Simulink: src/, simulink/, examples/, tests/
-│   └── webots/               World, PROTO, controller Python, tests/
-├── Hardware/                 Khung + tay lấy từ madl3x/x-scara (GPL-3.0)
-│   ├── 3D Print/             STL xếp theo màu/số lượng in
-│   ├── arm/, frame/          STL gốc, BOM, ảnh lắp ráp của X-SCARA
-│   └── Pen_Holder_EG118/     Giá kẹp bút (SCAD, Python, STL)
-├── Doc/                      Đánh giá firmware và nguyên nhân sai lệch nét vẽ
-└── media/                    Ảnh và video robot thật
+A = q1
+B = q2 + k*q1
+β = k*F2/F1
 ```
 
-## Phần cứng
+`q2` là góc khuỷu tương đối; `F1/F2` là số xung trên độ của từng trục.
+Giá trị snapshot MATLAB là dữ liệu của lần chạy đã ghi, có thể khác cấu hình GUI hiện tại.
+Không chép mặc định một hệ số giữa các bộ cấu hình.
 
-Khung (nhôm định hình 2020/2040, 3 thanh trượt Ø8 mm, vít me Tr8) và tay
-robot dùng nguyên thiết kế
-**[madl3x/x-scara](https://github.com/madl3x/x-scara/tree/master)**.
-Xem repo gốc để có bản thiết kế mới nhất và hướng dẫn lắp ráp đầy đủ.
+### Đấu dây và firmware
 
-### Đấu dây
+TB6600 nối chung âm: PUL−, DIR−, ENA− về GND chung.
 
-TB6600 nối kiểu chung âm: PUL-, DIR-, ENA- nối GND chung.
-
-| Trục | PUL+ | DIR+ | ENA+ | Công tắc biên (DIR HIGH) | Công tắc biên (DIR LOW) |
+| Trục | PUL+ | DIR+ | ENA+ | Biên DIR HIGH | Biên DIR LOW |
 | --- | --- | --- | --- | --- | --- |
-| Z  | PA0 | PA1  | PA2  | PA3 (trên) | PA4 (dưới) |
-| J1 | PA8 | PB15 | PB14 | PB0  | PB1  |
-| J2 | PA6 | PA7  | PB13 | PB10 | PB11 |
+| Z | PA0 | PA1 | PA2 | PA3, trên | PA4, dưới |
+| J1 | PA8 | PB15 | PB14 | PB0 | PB1 |
+| J2 | PA6 | PA7 | PB13 | PB10 | PB11 |
 
-Công tắc nối **COM-NC**: COM → GND, NC → GPIO (kéo lên 3,3 V), chân NO bỏ trống.
-Bình thường đọc LOW; khi chạm công tắc hoặc đứt dây đọc HIGH, nên đứt dây
-cũng được coi là lỗi an toàn.
+COM công tắc về GND, NC về GPIO kéo lên 3,3 V. Bình thường LOW; chạm công tắc
+hoặc hở dây là HIGH. Chiều DIR phải khớp cấu hình `positive_high`.
 
-### In 3D và lắp ráp
+Bộ HEX/BIN có sẵn trong [Firmware/ScaraCartesian/Hex](Firmware/ScaraCartesian/Hex),
+nạp tại `0x08000000` qua ST-LINK. Nhãn R9 được giữ lại trên branch; chỉ nhãn phiên bản
+không xác nhận binary khớp mọi thay đổi mã nguồn. Lần kiểm thử bên dưới chưa build lại
+firmware cho MCU hoặc nạp vào robot.
 
-- Danh sách in: [`Hardware/3D Print/README.md`](Hardware/3D%20Print/README.md)
-  (14 chi tiết khung, 23 chi tiết tay, 1 mẫu thử).
-- BOM và ảnh lắp ráp: [`Hardware/arm/BOM.md`](Hardware/arm/BOM.md),
-  [`Hardware/frame/BOM.md`](Hardware/frame/BOM.md).
-- Giá kẹp bút: [`Hardware/Pen_Holder_EG118`](Hardware/Pen_Holder_EG118).
+Build nguồn cần workspace Zephyr, SDK, CMake và Ninja.
+Script [build.ps1](Firmware/ScaraCartesian/tools/build.ps1) nhận
+`-ZephyrRoot`, `-SdkRoot`, `-Python`, `-BuildDirectory`, `-SkipExport`.
+Dùng `-SkipExport` khi muốn build riêng mà chưa ghi đè bộ HEX/BIN.
+Xem thêm [hướng dẫn firmware](Firmware/ScaraCartesian/README.md).
 
-## Bắt đầu nhanh
-
-### 1. Nạp firmware
-
-Bản dựng sẵn nằm ở `Firmware/ScaraCartesian/Hex/`:
-`SCARA_Cartesian_NC_Home_v5_R9.hex` (hoặc `.bin`). Nạp tại địa chỉ
-`0x08000000` bằng ST-LINK (STM32CubeProgrammer hoặc `st-flash`), rồi reset board.
-
-Build lại từ mã nguồn cần Zephyr SDK 0.16.8 và môi trường `west`. Xem
-[`Firmware/ScaraCartesian/README.md`](Firmware/ScaraCartesian/README.md) và
-`tools/build.ps1`; sửa các đường dẫn `D:/zephyrproject`, `D:/zephyr-sdk`
-cho đúng máy của bạn.
-
-### 2. Chạy GUI
-
-```bash
-cd Software
-pip install -r requirements.txt
-python src/cartesian_nc_control.py
-```
-
-Thêm `--demo` để chạy với robot giả lập, không mở cổng COM thật.
-
-Đóng gói EXE cho Windows (PyInstaller):
-
-```bash
-powershell -ExecutionPolicy Bypass -File Software/Build_Cartesian_NC_GUI.ps1 -Python python
-```
-
-Kết quả nằm trong `Software/dist/` (không đưa lên git).
-
-### 3. Vẽ
-
-1. Chọn cổng COM, kiểm tra thông số **Cơ khí**, rồi bấm **HOME / CALIB**.
-   GUI phải báo firmware `SCARA_CART_NC_HOME_V5_R9`.
-2. Hạ bút vừa chạm giấy, lấy/xác nhận **Z giấy**.
-3. Mở **Thư viện hình & chữ**, chọn hình, cỡ và tâm.
-4. **Chạy khô** trước, sau đó mới vẽ thật.
-5. Khi bấm Dừng/Esc, mất USB hoặc gặp lỗi biên, robot mất mốc: cần HOME lại.
-
-Chi tiết cách dùng và hiệu chỉnh: [`Software/README.md`](Software/README.md).
+BOM/in 3D: [tay](Hardware/arm/BOM.md) · [khung](Hardware/frame/BOM.md) ·
+[danh sách in](Hardware/3D%20Print/README.md) · [giá kẹp EG118](Hardware/Pen_Holder_EG118).
 
 ## Mô phỏng
 
-| Môi trường | Cách chạy | Hướng dẫn |
+| Môi trường | Vai trò và nguồn tham số | Điểm mở |
 | --- | --- | --- |
-| MATLAB/Simulink | Mở `Simulation/matlab`, chạy `run_scara` | [`Simulation/matlab/README.md`](Simulation/matlab/README.md) |
-| Webots | Mở `Simulation/webots/worlds/scara_draw.wbt`, nhấn **Run** | [`Simulation/webots/README.md`](Simulation/webots/README.md) |
+| MATLAB/Simulink | Tái hiện số xung DDA từ planner GUI, quy đổi động học, khảo sát NC/watchdog và sai lệch giả định; snapshot ở `matlab/config/robot_calibration.json` | [scara_stepper.slx](Simulation/matlab/simulink/models/scara_stepper.slx) |
+| Webots | Nghiên cứu vật lý, PID và tiếp xúc bút/giấy với các giá trị ước lượng; dùng `common/config/scara.json` | [scara_draw.wbt](Simulation/webots/worlds/scara_draw.wbt) |
 
-MATLAB không cần Robotics System Toolbox hay Simscape Multibody. Simulink
-chỉ cần khi mở file `.slx`.
+Hai môi trường hiện có bộ tham số khác nhau. Kết quả Webots và fixture đối chiếu cũ
+không xác nhận mô hình stepper mới hoặc độ chính xác robot thực.
+
+### MATLAB/Simulink
+
+Đặt Current Folder ở `Simulation/matlab`. Cần MATLAB, Simulink để chạy mô hình,
+và Python có thể truy cập mã nguồn Software trong cùng repository.
+Không cần Robotics System Toolbox hay Simscape Multibody.
+
+```matlab
+run_scara                         % Giao diện 3D và chọn mẫu
+startup_scara;
+out = scara_simulink('flower');    % Chạy mô hình stepper
+validate_scara;                   % Kiểm thử MATLAB/Simulink
+```
+
+Mô hình dùng các khối Simulink chuẩn. Không còn bộ mô phỏng PID/động lực học MATLAB
+cũ trong branch này. Xem [hướng dẫn MATLAB](Simulation/matlab/README.md).
 
 <div align="center">
-<img src="Simulation/matlab/output/figures/assembly.png" alt="Mô hình 3D lắp ráp X-SCARA trên giấy 100 × 100 mm" height="360">
+<img src="Simulation/matlab/output/figures/assembly.png" alt="Mô hình lắp ráp SCARA trong MATLAB" height="280">
 &nbsp;
-<img src="Simulation/matlab/output/figures/app_ui.png" alt="Giao diện mô phỏng MATLAB" height="360">
+<img src="Simulation/matlab/output/figures/tracking.png" alt="Kết quả tái hiện quỹ đạo trong mô phỏng" height="280">
+<br><sub>Ảnh kết quả mô phỏng đã lưu trong repository.</sub>
 </div>
+
+### Webots
+
+Mở `Simulation/webots/worlds/scara_draw.wbt`, nhấn **Run**.
+Sửa [demo.json](Simulation/webots/config/demo.json), rồi Reset/Reload để đổi mẫu/chế độ.
+World lưu theo định dạng R2025a; runtime Webots chưa được kiểm chứng lại trong lần
+kiểm thử branch này. Xem [hướng dẫn Webots](Simulation/webots/README.md).
+
+## Cấu trúc và điểm vào mã nguồn
+
+```text
+.
+├── Firmware/ScaraCartesian/
+│   ├── src/                 Core, HOME, DDA, lệnh, telemetry, GPIO/timer
+│   ├── tests/               Harness C và kiểm thử artifact
+│   ├── tools/               Build, verify, kiểm tra HEX/BIN
+│   └── Hex/                 Bộ firmware và báo cáo có sẵn
+├── Software/
+│   ├── src/                 GUI R15, mô hình, planner, vector, 3D, hiệu chuẩn, log
+│   ├── tests/               Unit test và GUI smoke test bằng cổng giả lập
+│   ├── packaging/           Spec PyInstaller, hiện còn tên R14
+│   └── reports/             Báo cáo kiểm thử và phân tích log
+├── Simulation/
+│   ├── matlab/              config/, src/, simulink/, tests/, tools/, output/
+│   ├── webots/              World, PROTO, controller, tests
+│   └── common/              Cấu hình/asset/CSV phục vụ Webots
+├── Hardware/                STL, BOM, hướng dẫn lắp, giá kẹp EG118
+├── Doc/                     Đánh giá firmware và sai lệch nét vẽ
+├── media/                   Ảnh và video robot thực
+├── tools/                   Công cụ PowerShell dùng chung
+└── Verify_SCARA.ps1         Kiểm thử firmware trước, rồi software
+```
+
+Luồng điều khiển chính:
+
+```mermaid
+flowchart LR
+    GUI["GUI R15: hình, vector, XYZ"] --> PLAN["IK, preflight, planner nền"]
+    PLAN --> USB["USB CDC: PATH / SEG / GO"]
+    USB --> FW["Firmware R9: FIFO 32 đoạn, DDA"]
+    FW --> MOTOR["TB6600 → Z / J1 / J2"]
+    NC["6 công tắc NC"] --> FW
+    FW --> DATA["Telemetry → GUI, JSONL, đồ thị"]
+```
+
+Bắt đầu đọc từ [cartesian_nc_control.py](Software/src/cartesian_nc_control.py)
+và [main.c](Firmware/ScaraCartesian/src/main.c).
+Planner/USB chạy phía PC; firmware phát xung bằng timer và kiểm tra bảo vệ.
+Giới hạn mềm, NC, heartbeat 350 ms, USB, GPIO và cạn bộ đệm được xử lý trong firmware.
 
 ## Kiểm thử
 
-Các bài kiểm thử không cần robot thật.
+Chạy từ thư mục gốc; cần **Python và GCC** cho harness firmware.
+Các lệnh này dùng cổng/ngoại vi giả lập, không điều khiển robot thực.
 
-```bash
-# GUI: unit test (thêm -Gui để chạy smoke test giao diện)
-powershell -ExecutionPolicy Bypass -File Software/Verify_Cartesian_NC_GUI.ps1 -Python python
+```powershell
+# Firmware C + artifact tests + toàn bộ unit test software
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Verify_SCARA.ps1
 
-# Firmware: build harness C trên máy tính, kiểm thử home/DDA/giới hạn/watchdog
-powershell -ExecutionPolicy Bypass -File Firmware/ScaraCartesian/tools/verify.ps1 -Gcc gcc -Python python
+# Thêm 6 kịch bản GUI smoke test
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Verify_SCARA.ps1 -Gui
 
-# Webots: kiểm thử offline, không cần cài Webots
+# Webots offline, không cần cài Webots
 python -m unittest discover -s Simulation/webots/tests -v
 ```
 
-Kiểm thử firmware trên máy tính cần GCC (ví dụ MSYS2 UCRT64). MATLAB:
-chạy các file trong `Simulation/matlab/tests/`.
+Có thể truyền `-Python` và `-Gcc` cho `Verify_SCARA.ps1` khi công cụ không có trên PATH.
+Build/cache/log được tạo trong các thư mục đã bỏ qua bằng Git.
 
-## Hạn chế đã biết & các nâng cấp mới
+Kết quả kiểm tra **17/10/2026**, trên mã nguồn commit `4a8317a`:
 
-Phân tích log phần cứng thật (6 lần HOME, 58 nét vẽ) đã chỉ ra các nguyên nhân gây sai số và hiện đã được khắc phục trong mã nguồn:
-
-- **Hiệu chuẩn động học & hệ số ghép đai**: Firmware và GUI đã hỗ trợ tỷ số truyền danh định theo cơ khí (`factors = 24.0, 24.0 xung/độ` từ vi bước `16×` và bộ truyền đai `20T:54T`), khóa cứng hệ số ghép cơ khí (`β = 1/3`, `k = 0.5`), và chế độ HOME chốt tâm không cần quét biên ±90°.
-- **Hiệu năng & truyền quỹ đạo**: Firmware dùng toán học dấu phẩy động đơn (`float`: `sinf`/`cosf`/`atan2f`/`sqrtf`) tối ưu cho Cortex-M3, bộ đệm vòng UART RX 256 byte chống rớt ký tự, cơ chế truyền đường chạy `SEG` theo cửa sổ tín dụng (credit-based pipelining 8 đoạn), lập quỹ đạo nền đa luồng, nhập file vector SVG/DXF/G-code và tối ưu thứ tự nét vẽ bằng thuật toán 2-opt TSP.
-- **Độ rơ cơ khí**: Nét thẳng trên phần cứng thực tế nếu còn gãy hoặc cong nhẹ chủ yếu do độ rơ cơ khí (dây đai, giá kẹp bút) vì hệ thống mở không có encoder phản hồi.
-
-Phân tích đầy đủ và hướng sửa: [`Doc/Danh_gia_Firmware_SCARA.md`](Doc/Danh_gia_Firmware_SCARA.md).
-
-## Tài liệu
-
-| Tài liệu | Nội dung |
+| Phạm vi | Kết quả |
 | --- | --- |
-| [Doc/Danh_gia_Firmware_SCARA.md](Doc/Danh_gia_Firmware_SCARA.md) | Đánh giá firmware, nguyên nhân nét vẽ lệch/cong |
-| [Firmware/ScaraCartesian/README.md](Firmware/ScaraCartesian/README.md) | Đấu dây, HOME, bảo vệ, build |
-| [Software/README.md](Software/README.md) | Cách dùng GUI, hiệu chỉnh cơ khí |
-| [Software/reports/drawing_audit_20261008.md](Software/reports/drawing_audit_20261008.md) | Báo cáo phân tích nét vẽ từ log thật |
-| [Simulation/README.md](Simulation/README.md) | Tổng quan mô phỏng, giả định mô hình |
+| Harness C: core, protocol, GPIO/timer ISR | 3 chương trình kiểm thử đạt |
+| Kiểm thử công cụ firmware artifact | 6/6 đạt |
+| Unit test software | 78/78 đạt |
+| GUI smoke test, gồm R15 và wizard hiệu chuẩn | 6/6 kịch bản đạt |
+| Webots offline | 14/14 đạt |
+| MATLAB/Simulink | Chưa chạy lại; [báo cáo lưu sẵn](Simulation/matlab/output/validation/validation.json) thuộc lần kiểm tra trước |
+| MCU/robot thực và đóng gói EXE | Chưa kiểm chứng lại trong lần này |
 
-## Nguồn tham khảo & giấy phép
+## Giới hạn cần hiểu khi đọc kết quả
 
-- **Phần cứng khung và tay robot** (STL, ảnh lắp ráp, BOM):
-  [madl3x/x-scara](https://github.com/madl3x/x-scara/tree/master), tác giả
-  [@madl3x](https://github.com/madl3x), commit `3c7c17e`, giấy phép **GPL-3.0**.
-- Mesh mô phỏng và giá kẹp bút là sản phẩm dẫn xuất từ các STL trên; nguồn và
-  mã băm được ghi trong `Simulation/common/assets/manifest.json` và
-  `Hardware/Pen_Holder_EG118/NOTICE.txt`.
-- `Firmware/Ref` chứa mã sinh tự động bởi STM32CubeMX/HAL (giấy phép của STMicroelectronics).
+- Số xung phát ra không chứng minh motor/bút đã đến đúng vị trí. Độ rơ, trượt bước,
+  sai chiều dài khâu, góc công tắc và độ võng bút vẫn cần đo trên phần cứng.
+- Bù độ rơ và hiệu chuẩn 2/3 điểm là các công cụ hỗ trợ; kiểm thử phần mềm chưa xác nhận
+  mức cải thiện nét vẽ thực tế của branch R15.
+- Dữ liệu MATLAB là tái hiện offline theo snapshot. Khối độ rơ/độ trễ là kịch bản
+  khảo sát, không phải thông số cơ khí đã đo; không mô phỏng chi tiết điện driver.
+- Các bộ đọc SVG/DXF/G-code nằm trong [cartesian_nc_vector.py](Software/src/cartesian_nc_vector.py).
+  Cần xem trước và preflight file nhập; không coi đây là bộ CAD/CAM hỗ trợ mọi thực thể.
+- Một số README thành phần còn giữ mô tả phiên bản trước. Bảng thay đổi, cấu trúc
+  và kết quả kiểm thử ở README gốc này mô tả trạng thái branch đã nêu.
 
-Vì có thành phần dẫn xuất từ X-SCARA, toàn bộ repo phát hành theo
-**[GNU GPL v3.0](LICENSE)**.
+Tài liệu phân tích: [đánh giá firmware](Doc/Danh_gia_Firmware_SCARA.md) ·
+[tổng quan mô phỏng](Simulation/README.md).
 
-<div align="right"><a href="#scara-drawing-robot">Về đầu trang ↑</a></div>
+# English
 
----
+This HPMR/HK261 project controls a **2R + Z SCARA pen plotter** based on X-SCARA
+mechanics. This branch, `codex/scara-r15-upgrade-20261017`, contains the **R15
+Python GUI**, firmware source retaining the **R9/protocol 5** identifier, and revised simulation tools.
+
+## Branch highlights
+
+- **GUI:** 2D/3D views, a separate 3D window, step-jog, quick poses, six metric
+  cards and six limit-switch indicators.
+- **Drawing:** single-stroke A–Z/0–9 text, parametric patterns, SVG/DXF/G-code
+  import, stroke ordering and background planning.
+- **Calibration and data:** backlash tools, two-point switch-angle calibration,
+  three-point paper-plane fitting, telemetry plots and CSV/SVG/Markdown export.
+- **Firmware:** full/quick homing, belt coupling, backlash handling, diagnostics
+  and ACK/FIFO-aware trajectory upload.
+- **Simulation:** MATLAB now replays planner step counts using
+  `scara_stepper.slx`. Webots remains a separate physics/PID research model
+  with its own estimated parameters.
+- **Cleanup:** the legacy `Firmware/Ref` project and old MATLAB PID examples/models
+  were removed.
+
+## Quick start
+
+Run these PowerShell commands from the repository root with Python 3.12:
+
+```powershell
+python -m pip install -r Software/requirements.txt
+python Software/src/cartesian_nc_control.py --demo
+```
+
+For hardware, run the same GUI command without `--demo`. Check mechanics and
+driver settings, perform **HOME / CALIB**, establish paper Z, preview the drawing,
+then dry-run before drawing. Quick HOME reuses calibration retained in firmware
+memory; without prior calibration it performs a full HOME.
+
+The Windows launcher is [Run_Cartesian_GUI.bat](Software/Run_Cartesian_GUI.bat).
+Packaging scripts still use R14 names; an R15 EXE has not been validated.
+
+For MATLAB, open `Simulation/matlab` and run `run_scara`; MATLAB, Simulink and
+Python are required to run the stepper model. For Webots, open
+`Simulation/webots/worlds/scara_draw.wbt`. See the
+[simulation overview](Simulation/README.md) for the different parameter sources.
+
+## Validation and limits
+
+On **17 October 2026**, source commit `4a8317a` passed three C host test programs,
+six firmware artifact-tool tests, **78 software unit tests**, **six GUI smoke
+scenarios**, and **14 offline Webots tests**. Use `Verify_SCARA.ps1 -Gui` and the
+Webots unittest command in the [testing section](#kiểm-thử) to repeat them.
+
+MATLAB, the Webots runtime, MCU builds, physical drawing and EXE packaging were
+not revalidated in that run. Prebuilt firmware retains the R9 name; check or
+rebuild it before assuming it matches every source change.
+
+The robot is open-loop. Displayed positions and telemetry are based on step
+counts, not physical encoder feedback. Software tests and offline simulation
+do not establish pen accuracy on paper. The GUI's simplified 3D view is a
+visual aid, with dimensions referenced from the STL assets.
+
+## Nguồn và giấy phép / Credits and license
+
+- Khung, tay, STL, BOM và ảnh lắp ráp / frame and arm design:
+  [madl3x/x-scara](https://github.com/madl3x/x-scara), GPL-3.0.
+  Source revision recorded in this project: `3c7c17e3dc0805b41a3cac6d4cd2778d585d7ed2`.
+- Nguồn mesh / mesh provenance:
+  [Simulation/common/assets/manifest.json](Simulation/common/assets/manifest.json).
+- Giá kẹp bút / pen-holder attribution:
+  [Hardware/Pen_Holder_EG118/NOTICE.txt](Hardware/Pen_Holder_EG118/NOTICE.txt).
+
+Repository license: **[GNU GPL v3.0](LICENSE)**.
 
 <div align="center">
-Author / Tác giả: <a href="https://github.com/TuanLinh05">@TuanLinh05</a> · HK261
+Tác giả / Author: <a href="https://github.com/TuanLinh05">@TuanLinh05</a> · HK261
 </div>
